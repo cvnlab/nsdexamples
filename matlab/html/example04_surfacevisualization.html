@@ -1,0 +1,468 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Example 4: Automated surface visualization</title><meta name="generator" content="MATLAB 9.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-12-26"><meta name="DC.source" content="example04_surfacevisualization.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Example 4: Automated surface visualization</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Introduction</a></li><li><a href="#2">Example use of cvnlookup.m</a></li><li><a href="#6">Draw an ROI</a></li><li><a href="#11">Save the ROI</a></li><li><a href="#14">Example of automated surface visualization</a></li><li><a href="#17">Example of surface visualization from volume data</a></li></ul></div><h2 id="1">Introduction</h2><pre class="codeinput"><span class="comment">% cvnlookup.m is a function in the cvncode repository that enables</span>
+<span class="comment">% automated surface visualization (no manual intervention). This is</span>
+<span class="comment">% useful for large-scale analyses where manual intervention would</span>
+<span class="comment">% be prohibitively slow. Below, we provide some simple examples</span>
+<span class="comment">% of how to use the function. These examples include how to use</span>
+<span class="comment">% the function to draw an ROI on a surface.</span>
+<span class="comment">%</span>
+<span class="comment">% There are many different tools that can visualize surfaces, and</span>
+<span class="comment">% we encourage the user to decide what is best for their needs.</span>
+<span class="comment">% The major disadvantage of cvnlookup.m is that it has no GUI and</span>
+<span class="comment">% is not designed for interactive use (e.g. rotating/panning/zooming).</span>
+<span class="comment">%</span>
+<span class="comment">% Skills/concepts:</span>
+<span class="comment">% - How to use cvnlookup.m</span>
+<span class="comment">% - How to draw ROIs on surfaces</span>
+<span class="comment">% - Issues when mapping volume to surface</span>
+</pre><h2 id="2">Example use of cvnlookup.m</h2><pre class="codeinput"><span class="comment">% Note that a pre-requisite for using cvnlookup.m is to have your</span>
+<span class="comment">% FreeSurfer SUBJECTS_DIR environment variable set correctly.</span>
+getenv(<span class="string">'SUBJECTS_DIR'</span>)
+</pre><pre class="codeoutput">
+ans =
+
+    '/home/surly-raid4/kendrick-data/nsd/nsddata/freesurfer'
+
+</pre><pre class="codeinput"><span class="comment">% Let's visualize the Kastner2015 atlas on subj01</span>
+data = <span class="string">'~/nsd/nsddata/freesurfer/subj01/label/lh.Kastner2015.mgz'</span>;
+cvnlookup(<span class="string">'subj01'</span>,1,data,[0 25],jet(256),0.5);
+</pre><pre class="codeoutput">Warning: Image is too big to fit on screen; displaying at 50% 
+</pre><img vspace="5" hspace="5" src="example04_surfacevisualization_01.png" alt=""> <pre class="codeinput"><span class="comment">% Note that we automatically get some variables (rawimg,Lookup,rgbimg,himg)</span>
+<span class="comment">% assigned to the workspace (see 'help cvnlookup').</span>
+
+<span class="comment">% We can directly call imagesc on rawimg. This might be useful</span>
+<span class="comment">% for quickly playing around with colormaps and color ranges.</span>
+figure; imagesc(rawimg,[0 25]); colormap(jet(256)); axis <span class="string">image</span>;
+</pre><img vspace="5" hspace="5" src="example04_surfacevisualization_02.png" alt=""> <h2 id="6">Draw an ROI</h2><pre class="codeinput"><span class="comment">% Let's call cvnlookup again and explicitly get the outputs.</span>
+<span class="comment">% In this call, we will threshold away all of the values,</span>
+<span class="comment">% leaving just the curvature showing.</span>
+[rawimg,Lookup,rgbimg,himg] = cvnlookup(<span class="string">'subj01'</span>,1,data,[0 25],jet(256),25.5);
+</pre><pre class="codeoutput">Warning: Image is too big to fit on screen; displaying at 50% 
+</pre><img vspace="5" hspace="5" src="example04_surfacevisualization_03.png" alt=""> <pre class="codeinput"><span class="comment">% Manually draw an ROI on the left hemisphere near the tip of the calcarine sulcus.</span>
+<span class="comment">% Note: drawroipoly.m is valid only on spherical surfaces.</span>
+<span class="keyword">if</span> 0
+  Rmask = drawroipoly(himg,Lookup);
+<span class="keyword">end</span>
+
+<span class="comment">% To allow automated execution, we embed the above code in an if-statement</span>
+<span class="comment">% and provide the following hard-coded values:</span>
+Rmask = zeros(453622,1);
+Rmask([3635 3653 3654 3666 4269 4285 4286 4305 4306 4318 4319 4338 4339 4358 4375 4393 4408 4994 4995 5009 5010 5027 5028 5044 5045 5066 5076 5092 5107 5120 5708 5709 5710 5719 5720 5721 5733 5734 5735 5749 5750 5770 5791 5805 5806 5825 5826 5841 5842 5856 5857 5869 5870 6493 6503 6504 6515 6516 6534 6535 6557 6558 6571 6572 6594 6595 6616 6632 6647 7353 7354 7355 7366 7367 7387 7388 7410 7423 7441 7455 7469 7481 8173 8174 8188 8213 8214 8231 8232 8249 8269 8285 8286 8295 8296 8306 8307 8317 8318 8998 9019 9046 9062 9063 9084 9108 9128 9141 9151 9159]) = 1;
+
+<span class="comment">% Rmask is a (numlh+numrh)x1 binary mask</span>
+size(Rmask)
+</pre><pre class="codeoutput">
+ans =
+
+      453622           1
+
+</pre><pre class="codeinput"><span class="comment">% Let's visualize the ROI in order to check it</span>
+extraopts = {<span class="string">'roicolor'</span>,<span class="string">'k'</span>,<span class="string">'roimask'</span>,Rmask};
+cvnlookup(<span class="string">'subj01'</span>,1,data,[0 25],jet(256),0.5,[],[],extraopts);
+</pre><pre class="codeoutput">Warning: Image is too big to fit on screen; displaying at 50% 
+</pre><img vspace="5" hspace="5" src="example04_surfacevisualization_04.png" alt=""> <pre class="codeinput"><span class="comment">% We can also directly visualize the ROI as if it were data</span>
+cvnlookup(<span class="string">'subj01'</span>,1,Rmask,[0 1],gray);
+</pre><pre class="codeoutput">Warning: Image is too big to fit on screen; displaying at 50% 
+</pre><img vspace="5" hspace="5" src="example04_surfacevisualization_05.png" alt=""> <h2 id="11">Save the ROI</h2><pre class="codeinput"><span class="comment">% This is a little tricky because the ROI data reflects both hemispheres concatenated,</span>
+<span class="comment">% whereas we typically want to save .mgz files that reflect one hemisphere at a time.</span>
+
+<span class="comment">% First, create a valstruct and put the ROI inside it</span>
+valstruct = valstruct_create(<span class="string">'subj01'</span>);
+valstruct = setfield(valstruct,<span class="string">'data'</span>,Rmask);
+valstruct
+</pre><pre class="codeoutput">
+valstruct = 
+
+  struct with fields:
+
+     data: [453622x1 double]
+    numlh: 227021
+    numrh: 226601
+
+</pre><pre class="codeinput"><span class="comment">% Now, we can save an .mgz file</span>
+fsdir = <span class="string">'~/nsd/nsddata/freesurfer/subj01'</span>;
+nsd_savemgz(valstruct_getdata(valstruct,<span class="string">'lh'</span>),<span class="string">'lh.testA.mgz'</span>,fsdir);
+
+<span class="comment">% Note that lh.testA.mgz can be fed back as data into cvnlookup (even though it is just</span>
+<span class="comment">% one hemisphere, the code automatically fills in NaNs for the other hemisphere).</span>
+cvnlookup(<span class="string">'subj01'</span>,1,<span class="string">'lh.testA.mgz'</span>,[0 1],gray,0.5);
+</pre><pre class="codeoutput">Warning: &lt;data&gt; appears to have only the LH data. proceeding using NaNs for the
+RH data. 
+Warning: Image is too big to fit on screen; displaying at 50% 
+</pre><img vspace="5" hspace="5" src="example04_surfacevisualization_06.png" alt=""> <h2 id="14">Example of automated surface visualization</h2><pre class="codeinput"><span class="comment">% We will load in each subject's curvature values, map them (via nearest-neighbor)</span>
+<span class="comment">% to fsaverage, and then generate a visualization of the results.</span>
+
+<span class="comment">% define</span>
+subjs = {<span class="string">'subj01'</span> <span class="string">'subj02'</span> <span class="string">'subj03'</span> <span class="string">'subj04'</span> <span class="string">'subj05'</span> <span class="string">'subj06'</span> <span class="string">'subj07'</span> <span class="string">'subj08'</span> <span class="string">'fsaverage'</span>};
+hemis = {<span class="string">'lh'</span> <span class="string">'rh'</span>};
+
+<span class="comment">% do it</span>
+<span class="keyword">for</span> p=1:length(subjs)
+  subjectid = subjs{p};
+
+  <span class="comment">% for individual subjects, we have to map the curvature values to fsaverage</span>
+  <span class="keyword">if</span> p &lt;= 8
+
+    <span class="comment">% loop over hemispheres</span>
+    data = [];
+    <span class="keyword">for</span> h=1:length(hemis)
+      inputfile = sprintf(<span class="string">'~/nsd/nsddata/freesurfer/%s/surf/%s.curvature.mgz'</span>,subjectid,hemis{h});
+      data = [data; nsd_mapdata(p,sprintf(<span class="string">'%s.white'</span>,hemis{h}),<span class="string">'fsaverage'</span>,inputfile)];
+    <span class="keyword">end</span>
+
+  <span class="comment">% for fsaverage, we just have to load in the curvature values</span>
+  <span class="keyword">else</span>
+
+    <span class="comment">% load the curvature values from both hemispheres</span>
+    inputfile = sprintf(<span class="string">'~/nsd/nsddata/freesurfer/%s/surf/??.curvature.mgz'</span>,subjectid);
+    data = cvnloadmgz(inputfile);
+
+  <span class="keyword">end</span>
+
+  <span class="comment">% perform lookup and save to .png file</span>
+  outputfile = sprintf(<span class="string">'curvature_%s.png'</span>,subjectid);
+  [rawimg,Lookup,rgbimg,himg] = cvnlookup(<span class="string">'fsaverage'</span>,1,data &lt; 0,[-1 2],gray(256),[],[],0);
+  imwrite(rgbimg,outputfile);
+
+<span class="keyword">end</span>
+
+<span class="comment">% visualize</span>
+figure; imshow(<span class="string">'curvature_subj01.png'</span>);
+</pre><pre class="codeoutput">Warning: Image is too big to fit on screen; displaying at 50% 
+</pre><img vspace="5" hspace="5" src="example04_surfacevisualization_07.png" alt=""> <pre class="codeinput"><span class="comment">% Review all of the .png files that are written out. Confirm that the</span>
+<span class="comment">% curvature-based alignment of the different subjects to fsaverage is</span>
+<span class="comment">% of reasonable quality. An effective method for this is to quickly</span>
+<span class="comment">% flip between the various figures.</span>
+</pre><h2 id="17">Example of surface visualization from volume data</h2><pre class="codeinput"><span class="comment">% The official spaces for the prepared NSD betas are the functional</span>
+<span class="comment">% 1.8-mm space and the functional 1.0-mm space. This has the</span>
+<span class="comment">% consequence that if analyses are performed for the data in these</span>
+<span class="comment">% spaces, in order to generate surface visualizations of the results,</span>
+<span class="comment">% one must map from the functional volume spaces to the cortical</span>
+<span class="comment">% surface. Given the high-resolution of the functional data, we</span>
+<span class="comment">% prepare 3 different cortical surfaces (layerB1, layerB2, layerB3)</span>
+<span class="comment">% that exist at different depths through the gray matter. Here,</span>
+<span class="comment">% we show an example of how one might map from the functional volume</span>
+<span class="comment">% spaces to the cortical surface so that a surface visualization can</span>
+<span class="comment">% be made.</span>
+<span class="comment">%</span>
+<span class="comment">% Note that some provided data files are already mapped to the cortical</span>
+<span class="comment">% surface of each subject; for such data, there is no need to map to the surface.</span>
+
+<span class="comment">% define</span>
+hemis = {<span class="string">'lh'</span> <span class="string">'rh'</span>};
+subjix = 1;
+file0 = <span class="string">'~/nsd/nsddata/ppdata/subj01/func1pt8mm/prf_eccentricity.nii.gz'</span>;
+
+<span class="comment">% load data</span>
+a1 = load_untouch_nii(file0);
+
+<span class="comment">% map to the three depth surfaces using cubic interpolation</span>
+tdata = {};
+<span class="keyword">for</span> q=1:length(hemis)
+  <span class="keyword">for</span> d=1:3
+    tdata{q}(:,d) = nsd_mapdata(subjix,<span class="string">'func1pt8'</span>,sprintf(<span class="string">'%s.layerB%d'</span>,hemis{q},d),a1.img,<span class="string">'cubic'</span>,[],[],[],[]);
+  <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="comment">% average across depth and concatenate into a vector</span>
+data = cat(1,mean(tdata{1},2),mean(tdata{2},2));
+
+<span class="comment">% generate surface visualization</span>
+cvnlookup(sprintf(<span class="string">'subj%02d'</span>,subjix),1,data,[0 5],jet(256));
+</pre><pre class="codeoutput">working on volume 1 of 1.
+working on volume 1 of 1.
+working on volume 1 of 1.
+working on volume 1 of 1.
+working on volume 1 of 1.
+working on volume 1 of 1.
+Warning: Image is too big to fit on screen; displaying at 50% 
+</pre><img vspace="5" hspace="5" src="example04_surfacevisualization_08.png" alt=""> <pre class="codeinput"><span class="comment">% There are some issues that should be considered when performing the mapping</span>
+<span class="comment">% from volume to surface. One issue is the choice of interpolation (e.g. nearest vs.</span>
+<span class="comment">% linear vs. cubic), as this choice will indeed affect the results. Keep in mind that</span>
+<span class="comment">% different types of data may be more or less suitable for interpolation. For example,</span>
+<span class="comment">% circular quantities will need to be specially handled. Another issue is how</span>
+<span class="comment">% cortical depth is handled. In the example above, we simply average across</span>
+<span class="comment">% the three depths, but the user may want to handle this differently. A third issue</span>
+<span class="comment">% is that one needs to be careful about any potential non-finite values in the data</span>
+<span class="comment">% volume being mapped. Such values may propagate depending on the interpolation choice.</span>
+<span class="comment">% A fourth issue is that the mapping from volume to surface is in general a lossy</span>
+<span class="comment">% process (i.e. interpolation involves data modification and potential resolution loss),</span>
+<span class="comment">% so one should be careful in that regard.</span>
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Example 4: Automated surface visualization
+
+%% Introduction
+
+% cvnlookup.m is a function in the cvncode repository that enables
+% automated surface visualization (no manual intervention). This is
+% useful for large-scale analyses where manual intervention would
+% be prohibitively slow. Below, we provide some simple examples
+% of how to use the function. These examples include how to use 
+% the function to draw an ROI on a surface.
+%
+% There are many different tools that can visualize surfaces, and
+% we encourage the user to decide what is best for their needs.
+% The major disadvantage of cvnlookup.m is that it has no GUI and
+% is not designed for interactive use (e.g. rotating/panning/zooming).
+%
+% Skills/concepts:
+% - How to use cvnlookup.m
+% - How to draw ROIs on surfaces
+% - Issues when mapping volume to surface
+
+
+
+%% Example use of cvnlookup.m
+
+% Note that a pre-requisite for using cvnlookup.m is to have your
+% FreeSurfer SUBJECTS_DIR environment variable set correctly.
+getenv('SUBJECTS_DIR')
+%%
+
+% Let's visualize the Kastner2015 atlas on subj01
+data = '~/nsd/nsddata/freesurfer/subj01/label/lh.Kastner2015.mgz';
+cvnlookup('subj01',1,data,[0 25],jet(256),0.5);
+%%
+
+% Note that we automatically get some variables (rawimg,Lookup,rgbimg,himg) 
+% assigned to the workspace (see 'help cvnlookup').
+
+% We can directly call imagesc on rawimg. This might be useful
+% for quickly playing around with colormaps and color ranges.
+figure; imagesc(rawimg,[0 25]); colormap(jet(256)); axis image;
+%%
+
+
+
+%% Draw an ROI
+
+% Let's call cvnlookup again and explicitly get the outputs.
+% In this call, we will threshold away all of the values,
+% leaving just the curvature showing.
+[rawimg,Lookup,rgbimg,himg] = cvnlookup('subj01',1,data,[0 25],jet(256),25.5);
+%%
+
+% Manually draw an ROI on the left hemisphere near the tip of the calcarine sulcus.
+% Note: drawroipoly.m is valid only on spherical surfaces.
+if 0
+  Rmask = drawroipoly(himg,Lookup);
+end
+
+% To allow automated execution, we embed the above code in an if-statement
+% and provide the following hard-coded values:
+Rmask = zeros(453622,1);
+Rmask([3635 3653 3654 3666 4269 4285 4286 4305 4306 4318 4319 4338 4339 4358 4375 4393 4408 4994 4995 5009 5010 5027 5028 5044 5045 5066 5076 5092 5107 5120 5708 5709 5710 5719 5720 5721 5733 5734 5735 5749 5750 5770 5791 5805 5806 5825 5826 5841 5842 5856 5857 5869 5870 6493 6503 6504 6515 6516 6534 6535 6557 6558 6571 6572 6594 6595 6616 6632 6647 7353 7354 7355 7366 7367 7387 7388 7410 7423 7441 7455 7469 7481 8173 8174 8188 8213 8214 8231 8232 8249 8269 8285 8286 8295 8296 8306 8307 8317 8318 8998 9019 9046 9062 9063 9084 9108 9128 9141 9151 9159]) = 1;
+
+% Rmask is a (numlh+numrh)x1 binary mask
+size(Rmask)
+%%
+
+% Let's visualize the ROI in order to check it
+extraopts = {'roicolor','k','roimask',Rmask};
+cvnlookup('subj01',1,data,[0 25],jet(256),0.5,[],[],extraopts);
+%%
+
+% We can also directly visualize the ROI as if it were data
+cvnlookup('subj01',1,Rmask,[0 1],gray);
+%%
+
+
+
+%% Save the ROI
+
+% This is a little tricky because the ROI data reflects both hemispheres concatenated,
+% whereas we typically want to save .mgz files that reflect one hemisphere at a time.
+
+% First, create a valstruct and put the ROI inside it
+valstruct = valstruct_create('subj01');
+valstruct = setfield(valstruct,'data',Rmask);
+valstruct
+%%
+
+% Now, we can save an .mgz file
+fsdir = '~/nsd/nsddata/freesurfer/subj01';
+nsd_savemgz(valstruct_getdata(valstruct,'lh'),'lh.testA.mgz',fsdir);
+
+% Note that lh.testA.mgz can be fed back as data into cvnlookup (even though it is just
+% one hemisphere, the code automatically fills in NaNs for the other hemisphere).
+cvnlookup('subj01',1,'lh.testA.mgz',[0 1],gray,0.5);
+%%
+
+
+
+%% Example of automated surface visualization
+
+% We will load in each subject's curvature values, map them (via nearest-neighbor)
+% to fsaverage, and then generate a visualization of the results.
+
+% define
+subjs = {'subj01' 'subj02' 'subj03' 'subj04' 'subj05' 'subj06' 'subj07' 'subj08' 'fsaverage'};
+hemis = {'lh' 'rh'};
+
+% do it
+for p=1:length(subjs)
+  subjectid = subjs{p};
+  
+  % for individual subjects, we have to map the curvature values to fsaverage
+  if p <= 8
+  
+    % loop over hemispheres
+    data = [];
+    for h=1:length(hemis)
+      inputfile = sprintf('~/nsd/nsddata/freesurfer/%s/surf/%s.curvature.mgz',subjectid,hemis{h});
+      data = [data; nsd_mapdata(p,sprintf('%s.white',hemis{h}),'fsaverage',inputfile)];
+    end
+  
+  % for fsaverage, we just have to load in the curvature values
+  else
+
+    % load the curvature values from both hemispheres
+    inputfile = sprintf('~/nsd/nsddata/freesurfer/%s/surf/??.curvature.mgz',subjectid);
+    data = cvnloadmgz(inputfile);
+
+  end
+
+  % perform lookup and save to .png file
+  outputfile = sprintf('curvature_%s.png',subjectid);
+  [rawimg,Lookup,rgbimg,himg] = cvnlookup('fsaverage',1,data < 0,[-1 2],gray(256),[],[],0);
+  imwrite(rgbimg,outputfile);
+
+end
+
+% visualize
+figure; imshow('curvature_subj01.png');
+%%
+
+% Review all of the .png files that are written out. Confirm that the 
+% curvature-based alignment of the different subjects to fsaverage is 
+% of reasonable quality. An effective method for this is to quickly 
+% flip between the various figures.
+%%
+
+
+
+%% Example of surface visualization from volume data
+
+% The official spaces for the prepared NSD betas are the functional
+% 1.8-mm space and the functional 1.0-mm space. This has the 
+% consequence that if analyses are performed for the data in these
+% spaces, in order to generate surface visualizations of the results,
+% one must map from the functional volume spaces to the cortical
+% surface. Given the high-resolution of the functional data, we
+% prepare 3 different cortical surfaces (layerB1, layerB2, layerB3)
+% that exist at different depths through the gray matter. Here,
+% we show an example of how one might map from the functional volume
+% spaces to the cortical surface so that a surface visualization can
+% be made.
+%
+% Note that some provided data files are already mapped to the cortical
+% surface of each subject; for such data, there is no need to map to the surface.
+
+% define
+hemis = {'lh' 'rh'};
+subjix = 1;
+file0 = '~/nsd/nsddata/ppdata/subj01/func1pt8mm/prf_eccentricity.nii.gz';
+
+% load data
+a1 = load_untouch_nii(file0);
+
+% map to the three depth surfaces using cubic interpolation
+tdata = {};
+for q=1:length(hemis)
+  for d=1:3
+    tdata{q}(:,d) = nsd_mapdata(subjix,'func1pt8',sprintf('%s.layerB%d',hemis{q},d),a1.img,'cubic',[],[],[],[]);
+  end
+end
+
+% average across depth and concatenate into a vector
+data = cat(1,mean(tdata{1},2),mean(tdata{2},2));
+
+% generate surface visualization
+cvnlookup(sprintf('subj%02d',subjix),1,data,[0 5],jet(256));
+%%
+
+% There are some issues that should be considered when performing the mapping
+% from volume to surface. One issue is the choice of interpolation (e.g. nearest vs. 
+% linear vs. cubic), as this choice will indeed affect the results. Keep in mind that 
+% different types of data may be more or less suitable for interpolation. For example,
+% circular quantities will need to be specially handled. Another issue is how 
+% cortical depth is handled. In the example above, we simply average across
+% the three depths, but the user may want to handle this differently. A third issue 
+% is that one needs to be careful about any potential non-finite values in the data 
+% volume being mapped. Such values may propagate depending on the interpolation choice. 
+% A fourth issue is that the mapping from volume to surface is in general a lossy 
+% process (i.e. interpolation involves data modification and potential resolution loss),
+% so one should be careful in that regard.
+
+
+
+##### SOURCE END #####
+--></body></html>

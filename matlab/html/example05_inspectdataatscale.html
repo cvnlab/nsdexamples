@@ -1,0 +1,423 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Example 5: Inspect data at scale</title><meta name="generator" content="MATLAB 9.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-12-25"><meta name="DC.source" content="example05_inspectdataatscale.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Example 5: Inspect data at scale</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Introduction</a></li><li><a href="#2">Make a movie of brain volumes over time</a></li><li><a href="#4">Use a carpet plot (Power NeuroImage 2017) to quickly inspect time-series data</a></li></ul></div><h2 id="1">Introduction</h2><pre class="codeinput"><span class="comment">% In this script, we demonstrate two different ways to quickly and effectively</span>
+<span class="comment">% inspect large amounts of data. The first way is to use a high framerate</span>
+<span class="comment">% movie, thus exploiting the rapidity of our visual system. The second way is</span>
+<span class="comment">% to use an image to visualize many time series at once.</span>
+<span class="comment">%</span>
+<span class="comment">% Skills/concepts:</span>
+<span class="comment">% - Manipulation of images, volumes, and movies</span>
+<span class="comment">% - Image normalization and color ranges</span>
+<span class="comment">% - aseg (from FreeSurfer)</span>
+</pre><h2 id="2">Make a movie of brain volumes over time</h2><pre class="codeinput"><span class="comment">% In this example, we will inspect all of the pre-processed fMRI time-series data</span>
+<span class="comment">% from the first NSD session from subj01. Knowing how to use low-level routines</span>
+<span class="comment">% to create the movie is useful as it allows you to customize the movie to your needs.</span>
+
+<span class="comment">% define</span>
+files = <span class="string">'~/nsd/nsddata_timeseries/ppdata/subj01/func1pt8mm/timeseries/timeseries_session01_*.nii.gz'</span>;
+outfile = <span class="string">'testmovie'</span>;  <span class="comment">% we will add file extensions later</span>
+fps = 72;               <span class="comment">% frames per second for the movie</span>
+
+<span class="comment">% find the files</span>
+files0 = matchfiles(files);
+
+<span class="comment">% load the data from each run and construct orthographic image inspections</span>
+im = uint8([]);
+cnt = 1;
+<span class="keyword">for</span> p=1:length(files0)
+
+  <span class="comment">% load data and convert to double</span>
+  data0 = load_untouch_nii(files0{p});
+  data0 = double(data0.img);
+
+  <span class="comment">% for each volume, make an image</span>
+  <span class="keyword">for</span> r=1:size(data0,4)
+
+    <span class="comment">% pull out middle slice in all three dimensions</span>
+    imA = [];  <span class="comment">% 120 x 120 x 3</span>
+    imA = cat(3,imA,placematrix(zeros(120,120),             squeeze(data0(:,:,round(end/2),r))));
+    imA = cat(3,imA,placematrix(zeros(120,120),rotatematrix(squeeze(data0(:,round(end/2),:,r)),1,2,1)));
+    imA = cat(3,imA,placematrix(zeros(120,120),rotatematrix(squeeze(data0(round(end/2),:,:,r)),1,2,1)));
+
+    <span class="comment">% normalize, make a mosaic, and convert to uint8</span>
+    im(:,:,cnt) = uint8(255*makeimagestack(imA,[0 2000],1,[1 3]));
+    cnt = cnt + 1;
+
+    <span class="comment">% the first ten volumes of each run get marked by a little white square</span>
+    <span class="keyword">if</span> r &lt;= 10
+      im(1:4,1:4,end) = 255;
+    <span class="keyword">end</span>
+
+  <span class="keyword">end</span>
+
+<span class="keyword">end</span>
+
+<span class="comment">% visualize one image</span>
+figure; imshow(im(:,:,1));
+</pre><img vspace="5" hspace="5" src="example05_inspectdataatscale_01.png" alt=""> <pre class="codeinput"><span class="comment">% write all of the images to a single .mov file</span>
+imagesequencetomovie(im,sprintf(<span class="string">'%s.mov'</span>,outfile),fps);
+
+<span class="comment">% make a compressed version of the movie (mpeg-4 format)</span>
+unix_wrapper(sprintf(<span class="string">'HandBrakeCLI -i %s.mov -q 2 --strict-anamorphic -o %s.m4v'</span>,outfile,outfile));
+
+<span class="comment">% note that instead of QTWriter (used by imagesequencetomovie.m), we could perhaps use</span>
+<span class="comment">% other utilities such as built-in MATLAB toolbox functions and/or ffmpeg.</span>
+</pre><pre class="codeoutput">calling unix command:
+HandBrakeCLI -i testmovie.mov -q 2 --strict-anamorphic -o testmovie.m4v
+status of unix command:
+0
+result of unix command:
+
+[14:13:31] hb_init: starting libhb thread
+HandBrake rev5474 (2015021099) - Linux x86_64 - http://handbrake.fr
+32 CPUs detected
+Opening testmovie.mov...
+[14:13:31] hb_scan: path=testmovie.mov, title_index=1
+libbluray/bdnav/index_parse.c:162: indx_parse(): error opening testmovie.mov/BDMV/index.bdmv
+libbluray/bdnav/index_parse.c:162: indx_parse(): error opening testmovie.mov/BDMV/BACKUP/index.bdmv
+libbluray/bluray.c:1725: nav_get_title_list(testmovie.mov) failed (0x7f79b0000900)
+[14:13:31] bd: not a bd - trying as a stream/file instead
+libdvdnav: Using dvdnav version 4.1.3
+libdvdread: Using libdvdcss version 1.2.10 for DVD access
+libdvdnav:DVDOpenFileUDF:UDFFindFile /VIDEO_TS/VIDEO_TS.IFO failed
+libdvdnav:DVDOpenFileUDF:UDFFindFile /VIDEO_TS/VIDEO_TS.BUP failed
+libdvdread: Can't open file VIDEO_TS.IFO.
+libdvdnav: vm: failed to read VIDEO_TS.IFO
+[14:13:31] dvd: not a dvd - trying as a stream/file instead
+ [0;39mInput #0, mov,mp4,m4a,3gp,3g2,mj2, from 'testmovie.mov':
+ [0m [0;39m  Metadata:
+ [0m [0;39m    major_brand     : qt  
+ [0m [0;39m    minor_version   : 537199360
+ [0m [0;39m    compatible_brands: qt  
+ [0m [0;39m    creation_time   : 2018-07-21 19:37:39
+ [0m [0;39m  Duration:  [0m [0;39m00:00:37.69 [0m [0;39m, start:  [0m [0;39m0.000000 [0m [0;39m, bitrate:  [0m [0;39m14295 kb/s [0m [0;39m
+ [0m [0;39m    Stream #0.0 [0m [0;39m(eng) [0m [0;39m: Video: png, rgb24, 363x121, 14285 kb/s [0m [0;39m, 71.94 fps [0m [0;39m, 10k tbn [0m [0;39m
+ [0m [0;39m    Metadata:
+ [0m [0;39m      creation_time   : 2018-07-21 19:37:39
+ [0m[14:13:31] scan: decoding previews for title 1
+[14:13:31] scan: 10 previews, 362x120, 71.942 fps, autocrop = 0/0/0/0, aspect 3.02:1, PAR 1:1
+[14:13:31] libhb: scan thread found 1 valid title(s)
++ title 1:
+  + stream: testmovie.mov
+  + duration: 00:00:37
+  + size: 362x120, pixel aspect: 1/1, display aspect: 3.02, 71.942 fps
+  + autocrop: 0/0/0/0
+  + chapters:
+    + 1: cells 0-&gt;0, 0 blocks, duration 00:00:37
+  + audio tracks:
+  + subtitle tracks:
+[14:13:31] 1 job(s) to process
+[14:13:31] starting job
+[14:13:31] sync: expecting 2712 video frames
+[14:13:31] job configuration:
+[14:13:31]  * source
+[14:13:31]    + testmovie.mov
+[14:13:31]    + title 1, chapter(s) 1 to 1
+[14:13:31]    + container: mov,mp4,m4a,3gp,3g2,mj2
+[14:13:31]    + data rate: 14295 kbps
+[14:13:31]  * destination
+[14:13:31]    + testmovie.m4v
+[14:13:31]    + container: MPEG-4 (.mp4 and .m4v)
+[14:13:31]  * video track
+[14:13:31]    + decoder: png
+[14:13:31]      + bitrate 14285 kbps
+[14:13:31]    + frame rate: same as source (around 71.942 fps)
+[14:13:31]    + filters
+[14:13:31]      + Framerate Shaper (0:27000000:375300)
+[14:13:31]        + frame rate: same as source (around 71.942 fps)
+[14:13:31]      + Crop and Scale (362:120:0:0:0:0)
+[14:13:31]        + source: 362 * 120, crop (0/0/0/0): 362 * 120, scale: 362 * 120
+[14:13:31]    + strict anamorphic
+[14:13:31]      + storage dimensions: 362 * 120, mod 0
+[14:13:31]      + pixel aspect ratio: 1 / 1
+[14:13:31]      + display dimensions: 362 * 120
+[14:13:31]    + encoder: MPEG-4 (FFmpeg)
+[14:13:31]      + quality: 2.00 (QP)
+[14:13:31] reader: first SCR 0 id 0x0 DTS 0
+[14:13:31] encavcodecInit: MPEG-4 ASP encoder
+[14:13:31] encavcodec: encoding at constant quantizer 236
+[14:13:31] encavcodec: encoding with stored aspect 1/1
+Encoding: task 1 of 1, 8.30 %Encoding: task 1 of 1, 18.07 %Encoding: task 1 of 1, 29.09 %Encoding: task 1 of 1, 39.97 %Encoding: task 1 of 1, 51.00 %Encoding: task 1 of 1, 62.09 %Encoding: task 1 of 1, 73.08 %Encoding: task 1 of 1, 84.11 %Encoding: task 1 of 1, 95.02 %[14:13:34] reader: done. 1 scr changes
+[14:13:34] work: average encoding speed for job is 0.000000 fps
+[14:13:34] mux: track 0, 2712 frames, 791110 bytes, 167.89 kbps, fifo 4096
+Muxing: this may take awhile...[14:13:34] sync: got 2712 frames, 2712 expected
+[14:13:34] render: lost time: 0 (0 frames)
+[14:13:34] render: gained time: 0 (0 frames) (0 not accounted for)
+[14:13:34] png-decoder done: 2712 frames, 0 decoder errors, 0 drops
+[14:13:34] libhb: work result = 0
+
+Encode done!
+
+HandBrake has exited.
+
+</pre><h2 id="4">Use a carpet plot (Power NeuroImage 2017) to quickly inspect time-series data</h2><pre class="codeinput"><span class="comment">% In this example, we will use a carpet plot to visualize the same data as above.</span>
+
+<span class="comment">% define</span>
+files = <span class="string">'~/nsd/nsddata_timeseries/ppdata/subj01/func1pt8mm/timeseries/timeseries_session01_*.nii.gz'</span>;
+asegfile = <span class="string">'~/nsd/nsddata/ppdata/subj01/func1pt8mm/aseg.nii.gz'</span>;
+
+<span class="comment">% define more</span>
+grayix = [42 3];  <span class="comment">% gray matter  (rh is 42, lh is 3)</span>
+wmix =   [41 2];  <span class="comment">% white matter (rh is 41, lh is 2)</span>
+csfix =  24;      <span class="comment">% CSF</span>
+maxplot = 500;    <span class="comment">% maximum number of voxels to plot from each compartment</span>
+
+<span class="comment">% use aseg to decide which voxels to extract</span>
+aseg = load_untouch_nii(asegfile);
+grayvx = picksubset(find(ismember(aseg.img,grayix)),maxplot);
+wmvx   = picksubset(find(ismember(aseg.img,wmix)),maxplot);
+csfvx  = picksubset(find(ismember(aseg.img,csfix)),maxplot);
+
+<span class="comment">% calculate row bounds</span>
+rowbounds = [length(grayvx) length(wmvx) length(csfvx)];
+rowbounds = cumsum(rowbounds);
+
+<span class="comment">% find the time-series files</span>
+files0 = matchfiles(files);
+
+<span class="comment">% for each file, collect the data</span>
+colbounds = [];
+alldata = [];
+<span class="keyword">for</span> p=1:length(files0)
+
+  <span class="comment">% load data, convert to double, flatten voxels</span>
+  data0 = load_untouch_nii(files0{p});
+  data0 = squish(double(data0.img),3);
+
+  <span class="comment">% extract data and z-score each voxel</span>
+  temp = cat(1,data0(grayvx,:),data0(wmvx,:),data0(csfvx,:));
+  temp = calczscore(temp,2);  <span class="comment">% there are other ways we could normalize...</span>
+
+  <span class="comment">% record</span>
+  alldata = cat(2,alldata,temp);
+
+  <span class="comment">% calculate column bounds</span>
+  colbounds = [colbounds size(data0,2)];
+
+<span class="keyword">end</span>
+colbounds = cumsum(colbounds);
+
+<span class="comment">% make the visualization</span>
+figureprep([100 100 800 600],1); hold <span class="string">on</span>;
+imagesc(alldata,[-3 3]);
+colormap(gray);
+axis <span class="string">ij</span>;
+axis([.5 size(alldata,2)+.5 .5 size(alldata,1)+.5]);
+straightline(rowbounds+.5,<span class="string">'h'</span>,<span class="string">'r-'</span>);
+straightline(colbounds+.5,<span class="string">'v'</span>,<span class="string">'r-'</span>);
+xlabel(<span class="string">'Volume number'</span>);
+ylabel(<span class="string">'Voxel'</span>);
+</pre><img vspace="5" hspace="5" src="example05_inspectdataatscale_02.png" alt=""> <pre class="codeinput"><span class="comment">% In the plot, the three row compartments are gray matter, white matter, and CSF,</span>
+<span class="comment">% and the column compartments correspond to different fMRI runs.</span>
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Example 5: Inspect data at scale
+
+%% Introduction
+
+% In this script, we demonstrate two different ways to quickly and effectively
+% inspect large amounts of data. The first way is to use a high framerate
+% movie, thus exploiting the rapidity of our visual system. The second way is 
+% to use an image to visualize many time series at once.
+%
+% Skills/concepts:
+% - Manipulation of images, volumes, and movies
+% - Image normalization and color ranges
+% - aseg (from FreeSurfer)
+
+
+
+%% Make a movie of brain volumes over time
+
+% In this example, we will inspect all of the pre-processed fMRI time-series data
+% from the first NSD session from subj01. Knowing how to use low-level routines
+% to create the movie is useful as it allows you to customize the movie to your needs.
+
+% define
+files = '~/nsd/nsddata_timeseries/ppdata/subj01/func1pt8mm/timeseries/timeseries_session01_*.nii.gz';
+outfile = 'testmovie';  % we will add file extensions later
+fps = 72;               % frames per second for the movie
+
+% find the files
+files0 = matchfiles(files);
+
+% load the data from each run and construct orthographic image inspections
+im = uint8([]);
+cnt = 1;
+for p=1:length(files0)
+  
+  % load data and convert to double
+  data0 = load_untouch_nii(files0{p});
+  data0 = double(data0.img);
+
+  % for each volume, make an image
+  for r=1:size(data0,4)
+  
+    % pull out middle slice in all three dimensions
+    imA = [];  % 120 x 120 x 3
+    imA = cat(3,imA,placematrix(zeros(120,120),             squeeze(data0(:,:,round(end/2),r))));
+    imA = cat(3,imA,placematrix(zeros(120,120),rotatematrix(squeeze(data0(:,round(end/2),:,r)),1,2,1)));
+    imA = cat(3,imA,placematrix(zeros(120,120),rotatematrix(squeeze(data0(round(end/2),:,:,r)),1,2,1)));
+    
+    % normalize, make a mosaic, and convert to uint8
+    im(:,:,cnt) = uint8(255*makeimagestack(imA,[0 2000],1,[1 3]));
+    cnt = cnt + 1;
+    
+    % the first ten volumes of each run get marked by a little white square
+    if r <= 10
+      im(1:4,1:4,end) = 255;
+    end
+    
+  end
+
+end
+
+% visualize one image
+figure; imshow(im(:,:,1));
+%%
+
+% write all of the images to a single .mov file
+imagesequencetomovie(im,sprintf('%s.mov',outfile),fps);
+
+% make a compressed version of the movie (mpeg-4 format)
+unix_wrapper(sprintf('HandBrakeCLI -i %s.mov -q 2 REPLACE_WITH_DASH_DASHstrict-anamorphic -o %s.m4v',outfile,outfile));
+
+% note that instead of QTWriter (used by imagesequencetomovie.m), we could perhaps use 
+% other utilities such as built-in MATLAB toolbox functions and/or ffmpeg.
+
+
+
+%% Use a carpet plot (Power NeuroImage 2017) to quickly inspect time-series data
+
+% In this example, we will use a carpet plot to visualize the same data as above.
+
+% define
+files = '~/nsd/nsddata_timeseries/ppdata/subj01/func1pt8mm/timeseries/timeseries_session01_*.nii.gz';
+asegfile = '~/nsd/nsddata/ppdata/subj01/func1pt8mm/aseg.nii.gz';
+
+% define more
+grayix = [42 3];  % gray matter  (rh is 42, lh is 3)
+wmix =   [41 2];  % white matter (rh is 41, lh is 2)
+csfix =  24;      % CSF
+maxplot = 500;    % maximum number of voxels to plot from each compartment
+
+% use aseg to decide which voxels to extract
+aseg = load_untouch_nii(asegfile);
+grayvx = picksubset(find(ismember(aseg.img,grayix)),maxplot);
+wmvx   = picksubset(find(ismember(aseg.img,wmix)),maxplot);
+csfvx  = picksubset(find(ismember(aseg.img,csfix)),maxplot);
+
+% calculate row bounds
+rowbounds = [length(grayvx) length(wmvx) length(csfvx)];
+rowbounds = cumsum(rowbounds);
+
+% find the time-series files
+files0 = matchfiles(files);
+
+% for each file, collect the data
+colbounds = [];
+alldata = [];
+for p=1:length(files0)
+  
+  % load data, convert to double, flatten voxels
+  data0 = load_untouch_nii(files0{p});
+  data0 = squish(double(data0.img),3);
+  
+  % extract data and z-score each voxel
+  temp = cat(1,data0(grayvx,:),data0(wmvx,:),data0(csfvx,:));
+  temp = calczscore(temp,2);  % there are other ways we could normalize...
+  
+  % record
+  alldata = cat(2,alldata,temp);
+
+  % calculate column bounds
+  colbounds = [colbounds size(data0,2)];
+
+end
+colbounds = cumsum(colbounds);
+
+% make the visualization
+figureprep([100 100 800 600],1); hold on;
+imagesc(alldata,[-3 3]);
+colormap(gray);
+axis ij;
+axis([.5 size(alldata,2)+.5 .5 size(alldata,1)+.5]);
+straightline(rowbounds+.5,'h','r-');
+straightline(colbounds+.5,'v','r-');
+xlabel('Volume number');
+ylabel('Voxel');
+%%
+
+% In the plot, the three row compartments are gray matter, white matter, and CSF,
+% and the column compartments correspond to different fMRI runs.
+
+
+
+##### SOURCE END #####
+--></body></html>

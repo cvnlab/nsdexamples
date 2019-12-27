@@ -1,0 +1,885 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Example&nbsp;10: Building encoding models</title><meta name="generator" content="MATLAB 9.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-12-25"><meta name="DC.source" content="example10_encodingmodel.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Example&nbsp;10: Building encoding models</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Introduction</a></li><li><a href="#2">General setup</a></li><li><a href="#3">Do some stimulus pre-processing</a></li><li><a href="#6">Do some experimental-design preparation</a></li><li><a href="#8">Define the ROI that we will load from</a></li><li><a href="#9">Load NSD betas for the ROI</a></li><li><a href="#11">Start with a simple univariate regression</a></li><li><a href="#16">Think about multiple regression and stimulus correlations</a></li><li><a href="#18">Perform the multiple regression</a></li><li><a href="#21">Build the encoding model using ridge regression</a></li><li><a href="#25">Use analyzePRF to build the encoding model</a></li><li><a href="#27">Inspect all of the results</a></li><li><a href="#30">Postmortem</a></li></ul></div><h2 id="1">Introduction</h2><pre class="codeinput"><span class="comment">% In this script, we go through an example of building an encoding model for one</span>
+<span class="comment">% voxel in the NSD data. The model that we use is based on image contrast (computed</span>
+<span class="comment">% as the standard deviation of luminance within small square chunks of the image),</span>
+<span class="comment">% but the principles demonstrated here generalize to other types of models.</span>
+<span class="comment">%</span>
+<span class="comment">% Skills/concepts:</span>
+<span class="comment">% - OLS regression, ridge regression</span>
+<span class="comment">% - Cross-validation</span>
+<span class="comment">% - Correlated regressors</span>
+<span class="comment">% - pRF concepts and the analyzePRF.m toolbox</span>
+</pre><h2 id="2">General setup</h2><pre class="codeinput"><span class="comment">% define</span>
+stimfile = <span class="string">'~/nsd/nsddata_stimuli/stimuli/nsd/nsd_stimuli.hdf5'</span>;
+expfile = <span class="string">'~/nsd/nsddata/experiments/nsd/nsd_expdesign.mat'</span>;
+nsess = 5;                 <span class="comment">% how many of the first N NSD sessions to consider</span>
+betaver = <span class="string">'betas_fithrf'</span>;  <span class="comment">% which beta version to load</span>
+subjix = 1;
+ng  = 17;    <span class="comment">% number of elements in contrast grid (ng x ng)</span>
+npx = 25;    <span class="comment">% number of pixels that make up one grid element (npx x npx)</span>
+stimdeg = 8.4;  <span class="comment">% size of stimulus in degrees of visual angle</span>
+
+<span class="comment">% load</span>
+exp1 = load(expfile);
+</pre><h2 id="3">Do some stimulus pre-processing</h2><pre class="codeinput"><span class="comment">% determine vector of all of the 73k IDs that are involved in the data we will load</span>
+allimix = unique(exp1.subjectim(subjix,exp1.masterordering(1:750*nsess)));
+
+<span class="comment">% load and prepare images</span>
+ims = zeros(425,425,length(allimix));
+<span class="keyword">for</span> p=1:length(allimix)
+  statusdots(p,length(allimix));
+  im = h5read(stimfile,<span class="string">'/imgBrick'</span>,[1 1 1 allimix(p)],[3 425 425 1]);
+  im = single(rgb2gray(permute(im,[3 2 1])));  <span class="comment">% convert to grayscale and to single format</span>
+  im = (im/255).^2;                            <span class="comment">% convert to [0,1] and square to match display gamma</span>
+  ims(:,:,p) = im;
+<span class="keyword">end</span>
+size(ims)
+</pre><pre class="codeoutput">....................
+ans =
+
+         425         425        2492
+
+</pre><pre class="codeinput"><span class="comment">% compute a "contrast grid" from the images</span>
+imagecon = zeros(ng,ng,length(allimix));
+<span class="keyword">for</span> rowix=1:ng
+  statusdots(rowix,ng);
+  <span class="keyword">for</span> colix=1:ng
+    rowii = (rowix-1)*npx + (1:npx);
+    colii = (colix-1)*npx + (1:npx);
+    imagecon(rowix,colix,:) = std(squish(ims(rowii,colii,:),2),[],1);  <span class="comment">% standard deviation of pixels</span>
+  <span class="keyword">end</span>
+<span class="keyword">end</span>
+size(imagecon)
+</pre><pre class="codeoutput">.................
+ans =
+
+          17          17        2492
+
+</pre><h2 id="6">Do some experimental-design preparation</h2><pre class="codeinput"><span class="comment">% we want a trial-length vector that provides indices into the loaded images</span>
+expandtrials = [];
+<span class="keyword">for</span> p=1:750*nsess
+  thisid = exp1.subjectim(subjix,exp1.masterordering(p));  <span class="comment">% the 73k ID</span>
+  expandtrials(p) = find(ismember(allimix,thisid));        <span class="comment">% index relative to loaded images</span>
+<span class="keyword">end</span>
+size(expandtrials)
+min(expandtrials)
+max(expandtrials)
+</pre><pre class="codeoutput">
+ans =
+
+           1        3750
+
+
+ans =
+
+     1
+
+
+ans =
+
+        2492
+
+</pre><h2 id="8">Define the ROI that we will load from</h2><pre class="codeinput"><span class="comment">% load the Kastner atlas</span>
+roi1 = load_untouch_nii(sprintf(<span class="string">'~/nsd/nsddata/ppdata/subj%02d/func1pt8mm/roi/Kastner2015.nii.gz'</span>,subjix));
+
+<span class="comment">% select any voxel in V1v or V1d (in either hemisphere)</span>
+mask = ismember(roi1.img,[1 2]);  <span class="comment">% V1v, V1d</span>
+
+<span class="comment">% compute some handy indices</span>
+[d1,d2,d3,dii] = computebrickandindices(mask);
+</pre><h2 id="9">Load NSD betas for the ROI</h2><pre class="codeinput"><span class="comment">% load data</span>
+data = [];  <span class="comment">% voxels x 750 trials x sessions</span>
+<span class="keyword">for</span> p=1:nsess
+  fprintf(<span class="string">'sess %d...'</span>,p);
+  file0 = sprintf(<span class="string">'~/nsd/nsddata_betas/ppdata/subj%02d/func1pt8mm/%s/betas_session%02d.mat'</span>,subjix,betaver,p);
+  a1 = matfile(file0);
+  temp = double(a1.betas(d1,d2,d3,:))/300;  <span class="comment">% convert to double and then convert to percent signal change</span>
+  temp = squish(temp,3);                    <span class="comment">% flatten voxels</span>
+  temp = temp(dii,:);                       <span class="comment">% extract the voxels we want</span>
+  data(:,:,p) = temp;                       <span class="comment">% record</span>
+<span class="keyword">end</span>
+size(data)
+</pre><pre class="codeoutput">sess 1...sess 2...sess 3...sess 4...sess 5...
+ans =
+
+        2261         750           5
+
+</pre><h2 id="11">Start with a simple univariate regression</h2><pre class="codeinput"><span class="comment">% Here, we have pre-selected a single voxel and a single stimulus</span>
+<span class="comment">% feature to demonstrate some basic points.</span>
+
+<span class="comment">% define</span>
+voxix = 59;      <span class="comment">% this is an index relative to the voxels we have loaded</span>
+stimrowix = 2;
+stimcolix = 7;
+
+<span class="comment">% get the data for one voxel (concatenate all trials)</span>
+onevox = vflatten(data(voxix,:,:));  <span class="comment">% trials x 1</span>
+
+<span class="comment">% simple inspection</span>
+figure; hold <span class="string">on</span>;
+xx = flatten(imagecon(stimrowix,stimcolix,expandtrials));
+yy = flatten(onevox);
+scatter(xx,yy,<span class="string">'ro'</span>);
+xlabel(<span class="string">'Contrast'</span>);
+ylabel(<span class="string">'BOLD response (%)'</span>);
+</pre><img vspace="5" hspace="5" src="example10_encodingmodel_01.png" alt=""> <pre class="codeinput"><span class="comment">% In essence, this shows the key result that drives all other</span>
+<span class="comment">% analyses: the higher the contrast, the larger the BOLD response.</span>
+<span class="comment">% However, the details of the plot are hard to interpret due</span>
+<span class="comment">% to the density of the dots.</span>
+</pre><pre class="codeinput"><span class="comment">% make a better plot</span>
+figure; hold <span class="string">on</span>;
+xbins = 0:.01:.5;
+ybins = -10:.2:10;
+[n,x,y] = hist2d(xx,yy,xbins,ybins);
+imagesc(x(1,:),y(:,1),log(n));
+colormap(jet);
+straightline(0,<span class="string">'h'</span>,<span class="string">'w-'</span>);
+xlabel(<span class="string">'Contrast'</span>);
+ylabel(<span class="string">'BOLD response (%)'</span>);
+r = calccorrelation(xx,yy);
+title(sprintf(<span class="string">'r = %.2f'</span>,r));
+axis([-0.05 0.55 -11 11]);
+</pre><img vspace="5" hspace="5" src="example10_encodingmodel_02.png" alt=""> <pre class="codeinput"><span class="comment">% We haven't really done "regression" per se; however, Pearson's</span>
+<span class="comment">% correlation is essentially regression with one predictor</span>
+<span class="comment">% plus an offset (constant) term.</span>
+<span class="comment">%</span>
+<span class="comment">% Notice:</span>
+<span class="comment">% (1) There is a clear positive relationship between the</span>
+<span class="comment">%     stimulus feature (contrast) and the activity.</span>
+<span class="comment">% (2) The relationship is actually not perfectly linear.</span>
+<span class="comment">% (3) Most images tend to sample near the low end of contrast.</span>
+</pre><h2 id="16">Think about multiple regression and stimulus correlations</h2><pre class="codeinput"><span class="comment">% The activity in the voxel might be driven by the selected</span>
+<span class="comment">% grid location (row 2, column 7), but might be also driven</span>
+<span class="comment">% by nearby grid locations. The conventional approach to address</span>
+<span class="comment">% this is to fit a multiple regression model that incorporates</span>
+<span class="comment">% regressors for every grid location. However, stimulus correlations</span>
+<span class="comment">% will make this endeavor challenging.</span>
+
+<span class="comment">% define the reference grid element</span>
+ref = imagecon(stimrowix,stimcolix,:);
+
+<span class="comment">% compute correlation with all grid elements</span>
+featurecorr = calccorrelation(repmat(ref,[ng ng]),imagecon,3);
+
+<span class="comment">% visualize</span>
+figure; hold <span class="string">on</span>;
+imagesc(featurecorr,[-1 1]);
+axis <span class="string">image</span> <span class="string">tight</span>;
+set(gca,<span class="string">'YDir'</span>,<span class="string">'reverse'</span>);
+colormap(cmapsign4);
+colorbar;
+</pre><img vspace="5" hspace="5" src="example10_encodingmodel_03.png" alt=""> <pre class="codeinput"><span class="comment">% Notice that the contrast in location (2,7) is highly correlated</span>
+<span class="comment">% with contrast in nearby locations. In fact, small positive</span>
+<span class="comment">% correlations are found everywhere.</span>
+</pre><h2 id="18">Perform the multiple regression</h2><pre class="codeinput"><span class="comment">% Here, we will fit an encoding model that has 17*17 = 289</span>
+<span class="comment">% parameters. The underlying model is that the response is</span>
+<span class="comment">% given as a weighted sum of the grid contrasts. No intercept</span>
+<span class="comment">% in included in this model; thus, the model implies that</span>
+<span class="comment">% having no contrast anywhere (all grid contrasts are 0)</span>
+<span class="comment">% corresponds to a BOLD response of 0%. This is sensible</span>
+<span class="comment">% given that in the way that the NSD data are prepared,</span>
+<span class="comment">% beta weights of 0% correspond to the BOLD signal intensity</span>
+<span class="comment">% during the absence of image stimulation (gray background</span>
+<span class="comment">% during blank trials).</span>
+
+<span class="comment">% prepare for regression</span>
+X = squish(imagecon(:,:,expandtrials),2)';  <span class="comment">% trials x features</span>
+y = onevox;                                 <span class="comment">% trials x 1</span>
+
+<span class="comment">% fit the weights using ordinary least-squares</span>
+h = inv(X'*X)*X'*y;
+
+<span class="comment">% visualize</span>
+figure; hold <span class="string">on</span>;
+h1 = imagesc(reshape(h,[ng ng]));
+set(h1,<span class="string">'XData'</span>,([1 ng] - ((1+ng)/2)) * (stimdeg/ng));
+set(h1,<span class="string">'YData'</span>,([ng 1] - ((1+ng)/2)) * (stimdeg/ng));
+axis <span class="string">image</span> <span class="string">tight</span>;
+set(gca,<span class="string">'YDir'</span>,<span class="string">'normal'</span>);
+caxis(max(h(:)) * [-1 1]);
+colormap(cmapsign4); colorbar;
+xlabel(<span class="string">'x-position (deg)'</span>);
+ylabel(<span class="string">'y-position (deg)'</span>);
+</pre><img vspace="5" hspace="5" src="example10_encodingmodel_04.png" alt=""> <pre class="codeinput"><span class="comment">% The weights appear to be noisy. This is somewhat expected given:</span>
+<span class="comment">% (i) fMRI single-trial responses are quite noisy; (ii) the large</span>
+<span class="comment">% number of parameters being fitted (289) without any regularization;</span>
+<span class="comment">% (iii) the fact that we loaded only 5 NSD sessions (3750 trials);</span>
+<span class="comment">% and (iv) the fact that the regressors are highly correlated.</span>
+</pre><h2 id="21">Build the encoding model using ridge regression</h2><pre class="codeinput"><span class="comment">% A natural solution to the challenges noted above is to use</span>
+<span class="comment">% regularization in the parameter estimation, and a classic</span>
+<span class="comment">% regularization technique is ridge regression. Here, we will</span>
+<span class="comment">% perform ridge regression and use cross-validation to select</span>
+<span class="comment">% the amount of regularization to use.</span>
+
+<span class="comment">% define</span>
+lambdas = 10.^(-3:4);
+
+<span class="comment">% calculate the training/testing split</span>
+[testix,~,trainix] = picksubset(1:length(y),[5 1]);
+
+<span class="comment">% do it</span>
+hs = [];       <span class="comment">% weights x lambdas</span>
+testerr = [];  <span class="comment">% 1 x lambdas with the mean squared error</span>
+<span class="keyword">for</span> p=1:length(lambdas)
+  X0 = X(trainix,:);
+  y0 = y(trainix);
+  hs(:,p) = inv(X0'*X0 + lambdas(p)*eye(size(X0,2)))*X0'*y0;
+  testerr(p) = mean((X(testix,:)*hs(:,p) - y(testix)).^2);  <span class="comment">% mean squared error</span>
+<span class="keyword">end</span>
+
+<span class="comment">% which lambda was best?</span>
+[~,ii] = min(testerr);
+hfinal = hs(:,ii);
+
+<span class="comment">% visualize the results</span>
+figureprep([100 100 1000 400],1); hold <span class="string">on</span>;
+<span class="keyword">for</span> p=1:length(lambdas)
+  subplot(2,ceil(length(lambdas)/2),p); hold <span class="string">on</span>;
+  h1 = imagesc(reshape(hs(:,p),[ng ng]));
+  set(h1,<span class="string">'XData'</span>,([1 ng] - ((1+ng)/2)) * (stimdeg/ng));
+  set(h1,<span class="string">'YData'</span>,([ng 1] - ((1+ng)/2)) * (stimdeg/ng));
+  axis <span class="string">image</span> <span class="string">tight</span>;
+  set(gca,<span class="string">'YDir'</span>,<span class="string">'normal'</span>);
+  caxis(max(hs(:,p)) * [-1 1]);
+  colormap(cmapsign4); colorbar;
+  xlabel(<span class="string">'x-position (deg)'</span>);
+  ylabel(<span class="string">'y-position (deg)'</span>);
+  title(sprintf(<span class="string">'Lambda number %d'</span>,p));
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="example10_encodingmodel_05.png" alt=""> <pre class="codeinput"><span class="comment">% visualize test error</span>
+figure; hold <span class="string">on</span>;
+plot(testerr,<span class="string">'ro-'</span>);
+straightline(ii,<span class="string">'v'</span>,<span class="string">'k-'</span>);
+xlabel(<span class="string">'Lambda number'</span>);
+ylabel(<span class="string">'Mean squared error'</span>);
+</pre><img vspace="5" hspace="5" src="example10_encodingmodel_06.png" alt=""> <pre class="codeinput"><span class="comment">% Lambda number 1 produces essentially no regularization, whereas</span>
+<span class="comment">% Lambda number 8 produces extremely heavy regularization. The</span>
+<span class="comment">% best cross-validation performance is achieved using Lambda number 5.</span>
+</pre><h2 id="25">Use analyzePRF to build the encoding model</h2><pre class="codeinput"><span class="comment">% The toolbox analyzePRF implements a 2D Gaussian pRF model. Here, we will</span>
+<span class="comment">% use it to analyze the NSD betas. While it is interesting that the tool</span>
+<span class="comment">% can be used more or less as-is on the NSD betas, there are many</span>
+<span class="comment">% conceptual differences between the two approaches, including the following:</span>
+<span class="comment">%</span>
+<span class="comment">% (1) Typically, pRF analyses are performed on binary stimulus representations that are</span>
+<span class="comment">%     either OFF (0) or ON (1). In contrast, the preparation of the NSD stimuli that we</span>
+<span class="comment">%     have constructed is continuous (and involves certain assumptions about the "chunk size").</span>
+<span class="comment">%</span>
+<span class="comment">% (2) pRF analyses are typically performed on time-series data, whereas the betas we</span>
+<span class="comment">%     have prepared are amplitudes (expressed in percent signal change).</span>
+<span class="comment">%</span>
+<span class="comment">% (3) The pRF model implemented in analyzePRF not only imposes a shape constraint</span>
+<span class="comment">%     (2D isotropic Gaussian) on weights across the visual field, but also incorporates</span>
+<span class="comment">%     a static output nonlinearity. In contrast, the regression model demonstrated in</span>
+<span class="comment">%     this script is just a linear regression model with no constraints on the weights</span>
+<span class="comment">%     (aside from the regularization imposed by ridge regression).</span>
+<span class="comment">%</span>
+<span class="comment">% More information on analyzePRF can be found at analyzePRF/example*.m.</span>
+
+<span class="comment">% run analyzePRF.m</span>
+results = analyzePRF(double(imagecon(:,:,expandtrials)), <span class="keyword">...</span>
+                     onevox',1,struct(<span class="string">'hrf'</span>,1,<span class="string">'maxpolydeg'</span>,0,<span class="string">'seedmode'</span>,2,<span class="string">'typicalgain'</span>,1));
+</pre><pre class="codeoutput">*** analyzePRF: started at 25-Dec-2019 14:26:03. ***
+using the following maximum polynomial degrees: 0
+constructing seeds.
+generating super-grid time-series...Starting parallel pool (parpool) using the 'local' profile ...
+connected to 12 workers.
+done.Elapsed time is 26.566305 seconds.
+finding best seed for each voxel.
+*** fitnonlinearmodel: started at 25-Dec-2019 14:26:31. ***
+*** fitnonlinearmodel: loading data. ***
+*** fitnonlinearmodel: outputdir = , chunksize = 1, chunknum = 1
+*** fitnonlinearmodel: processing voxel 1 (1 of 1). ***
+  starting resampling case 1 of 1.
+      for model 1 of 2, the seed is [1.178 5.760 1.414 1.000 0.125 ].
+
+                                        First-Order                    Norm of 
+ Iteration  Func-count    Residual       optimality      Lambda           step
+     0           5         3625.18            58.6         0.01
+     1          12         3296.23             647            1         7.9396
+     2          17         3132.12             100          0.1        0.58251
+     3          22         3076.79            21.8         0.01       0.818545
+     4          27         3063.84            4.91        0.001       0.646766
+     5          32          3062.9            1.01       0.0001       0.202889
+     6          37         3062.86           0.198        1e-05      0.0401131
+     7          42         3062.86          0.0281        1e-06     0.00666366
+
+Local minimum possible.
+
+lsqcurvefit stopped because the final change in the sum of squares relative to 
+its initial value is less than the selected value of the function tolerance.
+
+
+
+      the estimated parameters are [1.946 6.834 0.955 9.379 0.125 ].
+      for model 2 of 2, the seed is [1.946 6.834 0.955 9.379 0.125 ].
+
+                                        First-Order                    Norm of 
+ Iteration  Func-count    Residual       optimality      Lambda           step
+     0           6         3062.86            19.5         0.01
+     1          13         3062.68            45.1          0.1        1.01549
+     2          19         3062.33            1.85         0.01      0.0854575
+     3          25         3062.33           0.682        0.001       0.082112
+     4          31         3062.33           0.799       0.0001      0.0273028
+
+Local minimum possible.
+
+lsqcurvefit stopped because the final change in the sum of squares relative to 
+its initial value is less than the selected value of the function tolerance.
+
+
+
+      the estimated parameters are [1.971 6.830 0.920 8.391 0.152 ].
+    trainperformance is 18.32. testperformance is NaN.
+  aggregatedtestperformance is NaN.
+*** fitnonlinearmodel: voxel 1 (1 of 1) took 1.6 seconds. ***
+*** fitnonlinearmodel: ended at 25-Dec-2019 14:26:33 (0.0 minutes). ***
+saving results to /tmp/tp9e20cea1_4e31_4e42_9fbf_e4bd91adbe3c.mat (just in case).
+*** analyzePRF: ended at 25-Dec-2019 14:26:33 (0.5 minutes). ***
+</pre><h2 id="27">Inspect all of the results</h2><pre class="codeinput"><span class="comment">% We are now ready to do some comparisons. We have three different sets of results.</span>
+<span class="comment">% One result is the simple linear regression model fitted to the NSD betas</span>
+<span class="comment">% using ridge regression. Another result is the 2D Gaussian pRF model (with output</span>
+<span class="comment">% nonlinearity) fitted to the NSD betas. A third result is the actual prf experiment</span>
+<span class="comment">% that was conducted on the NSD subjects and analyzed using analyzePRF.m. Note that</span>
+<span class="comment">% this reflects a completely different set of data (compared to the NSD betas).</span>
+
+<span class="comment">% load the prf results</span>
+prfang = getfield(load_untouch_nii(sprintf(<span class="string">'~/nsd/nsddata/ppdata/subj%02d/func1pt8mm/prf_angle.nii.gz'</span>,subjix)),<span class="string">'img'</span>);
+prfecc = getfield(load_untouch_nii(sprintf(<span class="string">'~/nsd/nsddata/ppdata/subj%02d/func1pt8mm/prf_eccentricity.nii.gz'</span>,subjix)),<span class="string">'img'</span>);
+prfsize = getfield(load_untouch_nii(sprintf(<span class="string">'~/nsd/nsddata/ppdata/subj%02d/func1pt8mm/prf_size.nii.gz'</span>,subjix)),<span class="string">'img'</span>);
+prfexpt = getfield(load_untouch_nii(sprintf(<span class="string">'~/nsd/nsddata/ppdata/subj%02d/func1pt8mm/prf_exponent.nii.gz'</span>,subjix)),<span class="string">'img'</span>);
+
+<span class="comment">% perform some indexing voodoo to calculate an index into the 1.8-mm volume space</span>
+temp = reshape(1:numel(roi1.img),size(roi1.img));
+temp = temp(d1,d2,d3);  <span class="comment">% pull out the brick</span>
+temp = temp(dii);       <span class="comment">% pull out the voxels extracted from this brick</span>
+volix = temp(voxix);    <span class="comment">% pull out the single voxel used in this script</span>
+
+<span class="comment">% make a visualization</span>
+  <span class="comment">% first, deal with ridge-regression on NSD betas</span>
+figureprep([100 100 600 600],1); hold <span class="string">on</span>;
+h1 = imagesc(reshape(hfinal,[ng ng]));
+set(h1,<span class="string">'XData'</span>,([1 ng] - ((1+ng)/2)) * (stimdeg/ng));
+set(h1,<span class="string">'YData'</span>,([ng 1] - ((1+ng)/2)) * (stimdeg/ng));
+axis <span class="string">image</span> <span class="string">tight</span>;
+set(gca,<span class="string">'YDir'</span>,<span class="string">'normal'</span>);
+caxis(max(hfinal) * [-1 1]);
+colormap(cmapsign4); colorbar;
+xlabel(<span class="string">'x-position (deg)'</span>);
+ylabel(<span class="string">'y-position (deg)'</span>);
+  <span class="comment">% then, deal with analyzePRF on NSD betas</span>
+xpos = cos(results.ang/180*pi) * results.ecc * (stimdeg/ng);
+ypos = sin(results.ang/180*pi) * results.ecc * (stimdeg/ng);
+rfsize = results.rfsize * (stimdeg/ng);
+set(drawellipse(xpos,ypos,0,rfsize,rfsize,[],[],<span class="string">'g-'</span>),<span class="string">'LineWidth'</span>,3);
+  <span class="comment">% finally, deal with results obtained from the prf experiment</span>
+xpos = cos(prfang(volix)/180*pi) * prfecc(volix);
+ypos = sin(prfang(volix)/180*pi) * prfecc(volix);
+set(drawellipse(xpos,ypos,0,prfsize(volix),prfsize(volix),[],[],<span class="string">'c-'</span>),<span class="string">'LineWidth'</span>,3);
+  <span class="comment">% finish up</span>
+axis([-6 6 -6 6]);
+</pre><img vspace="5" hspace="5" src="example10_encodingmodel_07.png" alt=""> <pre class="codeinput"><span class="comment">% The three sets of results are reasonably consistent.</span>
+</pre><h2 id="30">Postmortem</h2><pre class="codeinput"><span class="comment">% There are many choices made in this example script, all of which will</span>
+<span class="comment">% have an effect on modeling results and interpretation. These include</span>
+<span class="comment">% choices with respect to data preparation:</span>
+<span class="comment">%</span>
+<span class="comment">% - We used the NSD betas in their prepared raw units of percent signal change.</span>
+<span class="comment">%   Performing session-level normalization, such as z-scoring, may get rid of</span>
+<span class="comment">%   unwanted instabilities across sessions and may improve results.</span>
+<span class="comment">%</span>
+<span class="comment">% And include choices with respect to the modeling setup:</span>
+<span class="comment">%</span>
+<span class="comment">% - We prepared the NSD betas at the trial level as opposed to the image level.</span>
+<span class="comment">%   Thus, the cross-validation procedure does not necessarily test</span>
+<span class="comment">%   generalization to new images.</span>
+<span class="comment">%</span>
+<span class="comment">% And include choices with respect to the model itself:</span>
+<span class="comment">%</span>
+<span class="comment">% - The specific "chunk size" for the contrast grid calculation was somewhat</span>
+<span class="comment">%   arbitrary; changing the chunk size will change the nature of the model</span>
+<span class="comment">%   and will affect the results.</span>
+<span class="comment">% - To compute contrast, we used standard deviation of luminance values. Other</span>
+<span class="comment">%   ways to compute contrast are possible, such as standard deviation divided by</span>
+<span class="comment">%   mean luminance. Furthermore, instead of contrast, one could use specific image</span>
+<span class="comment">%   features such as the outputs of local oriented filters (e.g. Gabor functions)</span>
+<span class="comment">%   applied to the stimulus.</span>
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Example 10: Building encoding models
+
+%% Introduction
+
+% In this script, we go through an example of building an encoding model for one
+% voxel in the NSD data. The model that we use is based on image contrast (computed
+% as the standard deviation of luminance within small square chunks of the image),
+% but the principles demonstrated here generalize to other types of models. 
+%
+% Skills/concepts:
+% - OLS regression, ridge regression
+% - Cross-validation
+% - Correlated regressors
+% - pRF concepts and the analyzePRF.m toolbox
+
+
+
+%% General setup
+
+% define
+stimfile = '~/nsd/nsddata_stimuli/stimuli/nsd/nsd_stimuli.hdf5';
+expfile = '~/nsd/nsddata/experiments/nsd/nsd_expdesign.mat';
+nsess = 5;                 % how many of the first N NSD sessions to consider
+betaver = 'betas_fithrf';  % which beta version to load
+subjix = 1;
+ng  = 17;    % number of elements in contrast grid (ng x ng)
+npx = 25;    % number of pixels that make up one grid element (npx x npx)
+stimdeg = 8.4;  % size of stimulus in degrees of visual angle
+
+% load
+exp1 = load(expfile);
+
+
+
+%% Do some stimulus pre-processing
+
+% determine vector of all of the 73k IDs that are involved in the data we will load
+allimix = unique(exp1.subjectim(subjix,exp1.masterordering(1:750*nsess)));
+
+% load and prepare images
+ims = zeros(425,425,length(allimix));
+for p=1:length(allimix)
+  statusdots(p,length(allimix));
+  im = h5read(stimfile,'/imgBrick',[1 1 1 allimix(p)],[3 425 425 1]);
+  im = single(rgb2gray(permute(im,[3 2 1])));  % convert to grayscale and to single format
+  im = (im/255).^2;                            % convert to [0,1] and square to match display gamma
+  ims(:,:,p) = im;
+end
+size(ims)
+%%
+
+% compute a "contrast grid" from the images
+imagecon = zeros(ng,ng,length(allimix));
+for rowix=1:ng
+  statusdots(rowix,ng);
+  for colix=1:ng
+    rowii = (rowix-1)*npx + (1:npx);
+    colii = (colix-1)*npx + (1:npx);
+    imagecon(rowix,colix,:) = std(squish(ims(rowii,colii,:),2),[],1);  % standard deviation of pixels
+  end
+end
+size(imagecon)
+%%
+
+
+
+%% Do some experimental-design preparation
+
+% we want a trial-length vector that provides indices into the loaded images
+expandtrials = [];
+for p=1:750*nsess
+  thisid = exp1.subjectim(subjix,exp1.masterordering(p));  % the 73k ID
+  expandtrials(p) = find(ismember(allimix,thisid));        % index relative to loaded images
+end
+size(expandtrials)
+min(expandtrials)
+max(expandtrials)
+%%
+
+
+
+%% Define the ROI that we will load from
+
+% load the Kastner atlas
+roi1 = load_untouch_nii(sprintf('~/nsd/nsddata/ppdata/subj%02d/func1pt8mm/roi/Kastner2015.nii.gz',subjix));
+
+% select any voxel in V1v or V1d (in either hemisphere)
+mask = ismember(roi1.img,[1 2]);  % V1v, V1d
+
+% compute some handy indices
+[d1,d2,d3,dii] = computebrickandindices(mask);
+
+
+
+%% Load NSD betas for the ROI
+
+% load data
+data = [];  % voxels x 750 trials x sessions
+for p=1:nsess
+  fprintf('sess %d...',p);
+  file0 = sprintf('~/nsd/nsddata_betas/ppdata/subj%02d/func1pt8mm/%s/betas_session%02d.mat',subjix,betaver,p);
+  a1 = matfile(file0);
+  temp = double(a1.betas(d1,d2,d3,:))/300;  % convert to double and then convert to percent signal change
+  temp = squish(temp,3);                    % flatten voxels
+  temp = temp(dii,:);                       % extract the voxels we want
+  data(:,:,p) = temp;                       % record
+end
+size(data)
+%%
+
+
+
+%% Start with a simple univariate regression
+
+% Here, we have pre-selected a single voxel and a single stimulus
+% feature to demonstrate some basic points.
+
+% define
+voxix = 59;      % this is an index relative to the voxels we have loaded
+stimrowix = 2;
+stimcolix = 7;
+
+% get the data for one voxel (concatenate all trials)
+onevox = vflatten(data(voxix,:,:));  % trials x 1
+
+% simple inspection
+figure; hold on;
+xx = flatten(imagecon(stimrowix,stimcolix,expandtrials));
+yy = flatten(onevox);
+scatter(xx,yy,'ro');
+xlabel('Contrast');
+ylabel('BOLD response (%)');
+%%
+
+% In essence, this shows the key result that drives all other
+% analyses: the higher the contrast, the larger the BOLD response.
+% However, the details of the plot are hard to interpret due 
+% to the density of the dots.
+%%
+
+% make a better plot
+figure; hold on;
+xbins = 0:.01:.5;
+ybins = -10:.2:10;
+[n,x,y] = hist2d(xx,yy,xbins,ybins);
+imagesc(x(1,:),y(:,1),log(n));
+colormap(jet);
+straightline(0,'h','w-');
+xlabel('Contrast');
+ylabel('BOLD response (%)');
+r = calccorrelation(xx,yy);
+title(sprintf('r = %.2f',r));
+axis([-0.05 0.55 -11 11]);
+%%
+
+% We haven't really done "regression" per se; however, Pearson's
+% correlation is essentially regression with one predictor
+% plus an offset (constant) term.
+%
+% Notice:
+% (1) There is a clear positive relationship between the 
+%     stimulus feature (contrast) and the activity.
+% (2) The relationship is actually not perfectly linear.
+% (3) Most images tend to sample near the low end of contrast.
+%%
+
+
+
+%% Think about multiple regression and stimulus correlations
+
+% The activity in the voxel might be driven by the selected
+% grid location (row 2, column 7), but might be also driven
+% by nearby grid locations. The conventional approach to address
+% this is to fit a multiple regression model that incorporates
+% regressors for every grid location. However, stimulus correlations
+% will make this endeavor challenging.
+
+% define the reference grid element
+ref = imagecon(stimrowix,stimcolix,:);
+
+% compute correlation with all grid elements
+featurecorr = calccorrelation(repmat(ref,[ng ng]),imagecon,3);
+
+% visualize
+figure; hold on;
+imagesc(featurecorr,[-1 1]);
+axis image tight;
+set(gca,'YDir','reverse');
+colormap(cmapsign4);
+colorbar;
+%%
+
+% Notice that the contrast in location (2,7) is highly correlated
+% with contrast in nearby locations. In fact, small positive
+% correlations are found everywhere.
+
+
+
+%% Perform the multiple regression
+
+% Here, we will fit an encoding model that has 17*17 = 289
+% parameters. The underlying model is that the response is
+% given as a weighted sum of the grid contrasts. No intercept
+% in included in this model; thus, the model implies that
+% having no contrast anywhere (all grid contrasts are 0)
+% corresponds to a BOLD response of 0%. This is sensible
+% given that in the way that the NSD data are prepared,
+% beta weights of 0% correspond to the BOLD signal intensity 
+% during the absence of image stimulation (gray background
+% during blank trials).
+
+% prepare for regression
+X = squish(imagecon(:,:,expandtrials),2)';  % trials x features
+y = onevox;                                 % trials x 1
+
+% fit the weights using ordinary least-squares
+h = inv(X'*X)*X'*y;
+
+% visualize
+figure; hold on;
+h1 = imagesc(reshape(h,[ng ng]));
+set(h1,'XData',([1 ng] - ((1+ng)/2)) * (stimdeg/ng));
+set(h1,'YData',([ng 1] - ((1+ng)/2)) * (stimdeg/ng));
+axis image tight;
+set(gca,'YDir','normal');
+caxis(max(h(:)) * [-1 1]);
+colormap(cmapsign4); colorbar;
+xlabel('x-position (deg)');
+ylabel('y-position (deg)');
+%%
+
+% The weights appear to be noisy. This is somewhat expected given:
+% (i) fMRI single-trial responses are quite noisy; (ii) the large
+% number of parameters being fitted (289) without any regularization;
+% (iii) the fact that we loaded only 5 NSD sessions (3750 trials);
+% and (iv) the fact that the regressors are highly correlated.
+%%
+
+
+
+%% Build the encoding model using ridge regression
+
+% A natural solution to the challenges noted above is to use
+% regularization in the parameter estimation, and a classic
+% regularization technique is ridge regression. Here, we will
+% perform ridge regression and use cross-validation to select
+% the amount of regularization to use.
+
+% define
+lambdas = 10.^(-3:4);
+
+% calculate the training/testing split
+[testix,~,trainix] = picksubset(1:length(y),[5 1]);
+
+% do it
+hs = [];       % weights x lambdas
+testerr = [];  % 1 x lambdas with the mean squared error
+for p=1:length(lambdas)
+  X0 = X(trainix,:);
+  y0 = y(trainix);
+  hs(:,p) = inv(X0'*X0 + lambdas(p)*eye(size(X0,2)))*X0'*y0;
+  testerr(p) = mean((X(testix,:)*hs(:,p) - y(testix)).^2);  % mean squared error
+end
+
+% which lambda was best?
+[~,ii] = min(testerr);
+hfinal = hs(:,ii);
+
+% visualize the results
+figureprep([100 100 1000 400],1); hold on;
+for p=1:length(lambdas)
+  subplot(2,ceil(length(lambdas)/2),p); hold on;
+  h1 = imagesc(reshape(hs(:,p),[ng ng]));
+  set(h1,'XData',([1 ng] - ((1+ng)/2)) * (stimdeg/ng));
+  set(h1,'YData',([ng 1] - ((1+ng)/2)) * (stimdeg/ng));
+  axis image tight;
+  set(gca,'YDir','normal');
+  caxis(max(hs(:,p)) * [-1 1]);
+  colormap(cmapsign4); colorbar;
+  xlabel('x-position (deg)');
+  ylabel('y-position (deg)');
+  title(sprintf('Lambda number %d',p));
+end
+%%
+
+% visualize test error
+figure; hold on;
+plot(testerr,'ro-');
+straightline(ii,'v','k-');
+xlabel('Lambda number');
+ylabel('Mean squared error');
+%%
+
+% Lambda number 1 produces essentially no regularization, whereas 
+% Lambda number 8 produces extremely heavy regularization. The
+% best cross-validation performance is achieved using Lambda number 5.
+%%
+
+
+
+%% Use analyzePRF to build the encoding model
+
+% The toolbox analyzePRF implements a 2D Gaussian pRF model. Here, we will 
+% use it to analyze the NSD betas. While it is interesting that the tool
+% can be used more or less as-is on the NSD betas, there are many 
+% conceptual differences between the two approaches, including the following:
+%
+% (1) Typically, pRF analyses are performed on binary stimulus representations that are
+%     either OFF (0) or ON (1). In contrast, the preparation of the NSD stimuli that we 
+%     have constructed is continuous (and involves certain assumptions about the "chunk size").
+%
+% (2) pRF analyses are typically performed on time-series data, whereas the betas we 
+%     have prepared are amplitudes (expressed in percent signal change).
+%
+% (3) The pRF model implemented in analyzePRF not only imposes a shape constraint
+%     (2D isotropic Gaussian) on weights across the visual field, but also incorporates
+%     a static output nonlinearity. In contrast, the regression model demonstrated in
+%     this script is just a linear regression model with no constraints on the weights
+%     (aside from the regularization imposed by ridge regression).
+%
+% More information on analyzePRF can be found at analyzePRF/example*.m.
+
+% run analyzePRF.m
+results = analyzePRF(double(imagecon(:,:,expandtrials)), ...
+                     onevox',1,struct('hrf',1,'maxpolydeg',0,'seedmode',2,'typicalgain',1));
+%%
+
+
+
+%% Inspect all of the results
+
+% We are now ready to do some comparisons. We have three different sets of results.
+% One result is the simple linear regression model fitted to the NSD betas
+% using ridge regression. Another result is the 2D Gaussian pRF model (with output
+% nonlinearity) fitted to the NSD betas. A third result is the actual prf experiment
+% that was conducted on the NSD subjects and analyzed using analyzePRF.m. Note that
+% this reflects a completely different set of data (compared to the NSD betas).
+
+% load the prf results
+prfang = getfield(load_untouch_nii(sprintf('~/nsd/nsddata/ppdata/subj%02d/func1pt8mm/prf_angle.nii.gz',subjix)),'img');
+prfecc = getfield(load_untouch_nii(sprintf('~/nsd/nsddata/ppdata/subj%02d/func1pt8mm/prf_eccentricity.nii.gz',subjix)),'img');
+prfsize = getfield(load_untouch_nii(sprintf('~/nsd/nsddata/ppdata/subj%02d/func1pt8mm/prf_size.nii.gz',subjix)),'img');
+prfexpt = getfield(load_untouch_nii(sprintf('~/nsd/nsddata/ppdata/subj%02d/func1pt8mm/prf_exponent.nii.gz',subjix)),'img');
+
+% perform some indexing voodoo to calculate an index into the 1.8-mm volume space
+temp = reshape(1:numel(roi1.img),size(roi1.img));
+temp = temp(d1,d2,d3);  % pull out the brick
+temp = temp(dii);       % pull out the voxels extracted from this brick
+volix = temp(voxix);    % pull out the single voxel used in this script
+
+% make a visualization
+  % first, deal with ridge-regression on NSD betas
+figureprep([100 100 600 600],1); hold on;
+h1 = imagesc(reshape(hfinal,[ng ng]));
+set(h1,'XData',([1 ng] - ((1+ng)/2)) * (stimdeg/ng));
+set(h1,'YData',([ng 1] - ((1+ng)/2)) * (stimdeg/ng));
+axis image tight;
+set(gca,'YDir','normal');
+caxis(max(hfinal) * [-1 1]);
+colormap(cmapsign4); colorbar;
+xlabel('x-position (deg)');
+ylabel('y-position (deg)');
+  % then, deal with analyzePRF on NSD betas
+xpos = cos(results.ang/180*pi) * results.ecc * (stimdeg/ng);
+ypos = sin(results.ang/180*pi) * results.ecc * (stimdeg/ng);
+rfsize = results.rfsize * (stimdeg/ng);
+set(drawellipse(xpos,ypos,0,rfsize,rfsize,[],[],'g-'),'LineWidth',3);
+  % finally, deal with results obtained from the prf experiment
+xpos = cos(prfang(volix)/180*pi) * prfecc(volix);
+ypos = sin(prfang(volix)/180*pi) * prfecc(volix);
+set(drawellipse(xpos,ypos,0,prfsize(volix),prfsize(volix),[],[],'c-'),'LineWidth',3);
+  % finish up
+axis([-6 6 -6 6]);
+%%
+
+% The three sets of results are reasonably consistent.
+%%
+
+
+
+%% Postmortem
+
+% There are many choices made in this example script, all of which will 
+% have an effect on modeling results and interpretation. These include
+% choices with respect to data preparation:
+%
+% - We used the NSD betas in their prepared raw units of percent signal change.
+%   Performing session-level normalization, such as z-scoring, may get rid of
+%   unwanted instabilities across sessions and may improve results.
+%
+% And include choices with respect to the modeling setup:
+%
+% - We prepared the NSD betas at the trial level as opposed to the image level.
+%   Thus, the cross-validation procedure does not necessarily test 
+%   generalization to new images.
+%
+% And include choices with respect to the model itself:
+%
+% - The specific "chunk size" for the contrast grid calculation was somewhat
+%   arbitrary; changing the chunk size will change the nature of the model
+%   and will affect the results.
+% - To compute contrast, we used standard deviation of luminance values. Other
+%   ways to compute contrast are possible, such as standard deviation divided by
+%   mean luminance. Furthermore, instead of contrast, one could use specific image
+%   features such as the outputs of local oriented filters (e.g. Gabor functions)
+%   applied to the stimulus.
+%%
+
+
+
+##### SOURCE END #####
+--></body></html>

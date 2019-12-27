@@ -1,0 +1,478 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Example 8: A simple example of MVPA on the NSD betas</title><meta name="generator" content="MATLAB 9.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-12-25"><meta name="DC.source" content="example08_simplecontrastmvpa.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Example 8: A simple example of MVPA on the NSD betas</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Introduction</a></li><li><a href="#2">General setup</a></li><li><a href="#3">Load face annotations</a></li><li><a href="#4">Load betas prepared in fsaverage space and analyze them</a></li><li><a href="#5">load data</a></li><li><a href="#6">prepare for searchlight</a></li><li><a href="#7">perform analysis</a></li><li><a href="#8">figure out vertices that live within the searchlight</a></li><li><a href="#9">get the data</a></li><li><a href="#10">do n-fold cross-validation</a></li><li><a href="#11">transform searchlight results to a full fsaverage representation</a></li><li><a href="#12">Generate cortical map visualizations</a></li></ul></div><h2 id="1">Introduction</h2><pre class="codeinput"><span class="comment">% In this script, we perform an analysis that has parallels to the analysis</span>
+<span class="comment">% demonstrated in the Example 7 script. Whereas in that script we perform a</span>
+<span class="comment">% t-test to determine brain regions that show differential activity to</span>
+<span class="comment">% faces vs. non-faces, in this script we perform so-called</span>
+<span class="comment">% 'multivariate pattern analysis' (MVPA) in which we use a statistical</span>
+<span class="comment">% classifier in an attempt to decode, given activity in a set of voxels,</span>
+<span class="comment">% whether the presented stimulus was a face or non-face. The main</span>
+<span class="comment">% differences across the two approaches is (1) the direction of the</span>
+<span class="comment">% statistical mapping learned and (2) the fact that MVPA is typically</span>
+<span class="comment">% used to analyze many voxels at the same time whereas the t-test</span>
+<span class="comment">% operates on single voxels at a time.</span>
+<span class="comment">%</span>
+<span class="comment">% The example below also demonstrates the analysis approach termed</span>
+<span class="comment">% 'searchlight'; in this approach, analysis is performed throughout</span>
+<span class="comment">% the brain, but using small groups of voxels that are extracted</span>
+<span class="comment">% at different brain locations.</span>
+<span class="comment">%</span>
+<span class="comment">% Skills/concepts:</span>
+<span class="comment">% - MVPA, searchlight</span>
+<span class="comment">% - Dealing with surface representations</span>
+<span class="comment">% - Dealing with subsampled surfaces (e.g. fsaverage5)</span>
+</pre><h2 id="2">General setup</h2><pre class="codeinput"><span class="comment">% define</span>
+expfile = <span class="string">'~/nsd/nsddata/experiments/nsd/nsd_expdesign.mat'</span>;
+nsess = 2;                 <span class="comment">% how many of the first N NSD sessions to consider</span>
+betaver = <span class="string">'betas_fithrf'</span>;  <span class="comment">% which beta version to load</span>
+radius = 3;                <span class="comment">% searchlight radius on fsaverage</span>
+fsalt = <span class="string">'fsaverage5'</span>;      <span class="comment">% alternative surface for determining searchlight locations</span>
+hemis = {<span class="string">'lh'</span> <span class="string">'rh'</span>};       <span class="comment">% strings referring to left and right hemispheres</span>
+restrictroi = <span class="string">'gVTC'</span>;      <span class="comment">% restrict searchlight analysis to this ROI</span>
+restrictroiix = [1];       <span class="comment">% index into the ROI</span>
+nfold = 5;                 <span class="comment">% how many folds for n-fold cross-validation?</span>
+
+<span class="comment">% load</span>
+exp1 = load(expfile);
+</pre><h2 id="3">Load face annotations</h2><pre class="codeinput"><span class="comment">% load automated outputs: simple face count</span>
+a1 = load(<span class="string">'~/Dropbox/nsdabudhabi/nsdextensions/NSD_Annotation_Efforts_1.0/Automated/Faces/regcount_mode1.mat'</span>);
+</pre><h2 id="4">Load betas prepared in fsaverage space and analyze them</h2><pre class="codeinput"><span class="comment">% loop over subjects</span>
+pctcorrect = single([]);  <span class="comment">% 164k vertices x 2 hemis x 8 subjects</span>
+<span class="keyword">for</span> subjix=1:8, subjix
+
+  <span class="keyword">for</span> hh=1:length(hemis)
+</pre><h2 id="5">load data</h2><pre class="codeinput">    <span class="comment">% load in all of the betas</span>
+    alldata = single([]);  <span class="comment">% 327684 vertices x 750 trials x sessions</span>
+    <span class="keyword">for</span> sess=1:nsess
+      fprintf(<span class="string">'sess%d...'</span>,sess);
+      file0 = sprintf(<span class="string">'~/nsd/nsddata_betas/ppdata/subj%02d/fsaverage/%s/%s.betas_session%02d.mgh'</span>,subjix,betaver,hemis{hh},sess);
+      data = cvnloadmgz(file0);  <span class="comment">% 327684 x 1 x 1 x 750</span>
+      alldata(:,:,sess) = single(permute(data,[1 4 2 3]));  <span class="comment">% use single to save on memory</span>
+      clear <span class="string">data</span>;
+    <span class="keyword">end</span>
+
+    <span class="comment">% prepare face counts (750 trials x sessions, non-negative integers)</span>
+    imageix = exp1.subjectim(subjix,exp1.masterordering(1:750*nsess));  <span class="comment">% 1 x trials with 73k IDs</span>
+    counts = a1.countval(imageix);    <span class="comment">% 1 x trials with face counts</span>
+    counts = reshape(counts,750,[]);  <span class="comment">% 750 trials x sessions</span>
+</pre><h2 id="6">prepare for searchlight</h2><pre class="codeinput">    <span class="comment">% load in ROI labelings (we will use this to restrict searchlight locations)</span>
+    [roimask,roidescription] = cvnroimask(<span class="string">'fsaverage'</span>,hemis{hh},restrictroi,[],[],<span class="string">'collapsevals'</span>);
+
+    <span class="comment">% load in surfaces</span>
+    surf    = cvnreadsurface(<span class="string">'fsaverage'</span>,hemis{hh},<span class="string">'sphere'</span>);
+    surfALT = cvnreadsurface(fsalt,      hemis{hh},<span class="string">'sphere'</span>);
+    hash    = surf.vertices*[1000 100 1]';    assert(length(unique(hash))==size(surf.vertices,1));
+    hashALT = surfALT.vertices*[1000 100 1]'; assert(length(unique(hashALT))==size(surfALT.vertices,1));
+    XYZ = [surf.vertices ones(size(surf.vertices,1),1)]';  <span class="comment">% prepare coordinates as 4 x V</span>
+
+    <span class="comment">% for which fsaverage vertices will we perform searchlight analysis?</span>
+    mask = ismember(roimask,restrictroiix) &amp; <span class="keyword">...</span><span class="comment">    % only fsaverage vertices within the chosen ROI</span>
+           ismember(hash,hashALT);                  <span class="comment">% only fsaverage vertices that are also in the alternative surface</span>
+    mask = find(mask);  <span class="comment">% a vector of indices into fsaverage vertices</span>
+    maskALT = [];       <span class="comment">% a corresponding vector of indices into the vertices of the alternative surface</span>
+    <span class="keyword">for</span> mm=1:length(mask)
+      maskALT(mm) = find(ismember(hashALT,hash(mask(mm))));
+    <span class="keyword">end</span>
+</pre><h2 id="7">perform analysis</h2><pre class="codeinput">    <span class="comment">% loop over searchlight locations</span>
+    results = zeros(1,length(mask));  <span class="comment">% this will contain pct correct for each searchlight location</span>
+    <span class="keyword">for</span> ss=1:length(mask)
+      statusdots(ss,length(mask));
+</pre><h2 id="8">figure out vertices that live within the searchlight</h2><pre class="codeinput">      <span class="comment">% get 3D coordinates</span>
+      coord = surf.vertices(mask(ss),:);  <span class="comment">% 1 x 3</span>
+
+      <span class="comment">% figure out rotation matrix</span>
+      rotmatrix = xyzrotatetoz(coord);
+
+      <span class="comment">% rotate all vertices so that the vertex is along z+ axis</span>
+      XYZ0 = rotmatrix*XYZ;
+
+      <span class="comment">% find the vertices above the equator and within radius mm</span>
+      searchix = find((XYZ0(3,:) &gt;= 0) &amp; (XYZ0(1,:).^2 + XYZ0(2,:).^2 &lt;= radius^2));  <span class="comment">% a vector of indices into fsaverage</span>
+
+      <span class="comment">% Note that this procedure of selecting vertices within a circle placed on the</span>
+      <span class="comment">% fsaverage sphere is only approximate. The fsaverage sphere is not only a</span>
+      <span class="comment">% distorted brain shape (a sphere), it is also only an approximate representation</span>
+      <span class="comment">% of the topology of individual subjects. A more accurate method of defining</span>
+      <span class="comment">% searchlights would be to compute physical units on the native surface of</span>
+      <span class="comment">% individual subjects.</span>
+</pre><h2 id="9">get the data</h2><pre class="codeinput">      thedata = reshape(alldata(searchix,:,:),length(searchix),[]);  <span class="comment">% vertices x trials</span>
+</pre><h2 id="10">do n-fold cross-validation</h2><pre class="codeinput">      <span class="comment">% obtain cross-validated predictions</span>
+      pred = [];  <span class="comment">% 1 x trials with the predicted outcome</span>
+      <span class="keyword">for</span> ff=1:nfold
+
+        <span class="comment">% split into training and testing</span>
+        [testix,~,trainix] = picksubset(1:size(thedata,2),[nfold ff]);
+
+        <span class="comment">% train the classifer and obtain predictions</span>
+        sample = thedata(:,testix)';            <span class="comment">% testing-trials x vertices</span>
+        training = thedata(:,trainix)';         <span class="comment">% training-trials x vertices</span>
+        group = vflatten(counts(trainix)) &gt; 0;  <span class="comment">% training-trials x 1 with 0/1 (1 means at least one face)</span>
+        testclass = classify(sample,training,group,<span class="string">'diagLinear'</span>);  <span class="comment">% testing-trials x 1 with the predictions</span>
+        pred(testix) = testclass;
+
+        <span class="comment">% Note that this is a Naive Bayes classifier, and it is just one of many</span>
+        <span class="comment">% possible statistical classifiers that one could use. Common alternatives</span>
+        <span class="comment">% include SVM, LDA, logistic regression, and nearest-centroid classifier.</span>
+
+      <span class="keyword">end</span>
+
+      <span class="comment">% calculate percent correct</span>
+      results(ss) = mean( pred(:) == (counts(:) &gt; 0) ) * 100;
+
+    <span class="keyword">end</span>
+</pre><h2 id="11">transform searchlight results to a full fsaverage representation</h2><pre class="codeinput">    <span class="comment">% embed searchlight results into a vector for the alternative surface</span>
+    vals = copymatrix(zeros(size(surfALT.vertices,1),1),maskALT,results);
+
+    <span class="comment">% use nearest-neighbor interpolation to map to the fsaverage surface</span>
+    vals = cvntransfertosubject(fsalt,<span class="string">'fsaverage'</span>,vals(:),hemis{hh},<span class="string">'nearest'</span>,<span class="string">'orig'</span>,<span class="string">'orig'</span>);
+
+    <span class="comment">% record the results</span>
+    pctcorrect(:,hh,subjix) = vals;
+
+  <span class="keyword">end</span>
+
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">
+subjix =
+
+     1
+
+sess1...sess2.......................sess1...sess2.......................
+subjix =
+
+     2
+
+sess1...sess2.......................sess1...sess2.......................
+subjix =
+
+     3
+
+sess1...sess2.......................sess1...sess2.......................
+subjix =
+
+     4
+
+sess1...sess2.......................sess1...sess2.......................
+subjix =
+
+     5
+
+sess1...sess2.......................sess1...sess2.......................
+subjix =
+
+     6
+
+sess1...sess2.......................sess1...sess2.......................
+subjix =
+
+     7
+
+sess1...sess2.......................sess1...sess2.......................
+subjix =
+
+     8
+
+sess1...sess2.......................sess1...sess2.......................</pre><h2 id="12">Generate cortical map visualizations</h2><pre class="codeinput"><span class="comment">% first, we show individual subjects</span>
+Lookup = [];
+figureprep([0 0 1000 700],1);
+<span class="keyword">for</span> subjix=1:8
+
+  <span class="comment">% use ventral inflated view of fsaverage; range 50% to 80%</span>
+  [rawimg,Lookup,rgbimg] = cvnlookup(<span class="string">'fsaverage'</span>,3,vflatten(pctcorrect(:,:,subjix)), <span class="keyword">...</span>
+                                     [50 80],jet(256),[],Lookup,0);
+
+  <span class="comment">% write image to disk</span>
+  imwrite(rgbimg,sprintf(<span class="string">'facepct_subj%02d.png'</span>,subjix));
+
+  <span class="comment">% also place into figure window</span>
+  subplot(2,4,subjix); hold <span class="string">on</span>;
+  imshow(rgbimg);
+  title(sprintf(<span class="string">'Subject %d'</span>,subjix));
+
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="example08_simplecontrastmvpa_01.png" alt=""> <pre class="codeinput"><span class="comment">% then, we show the group average</span>
+cvnlookup(<span class="string">'fsaverage'</span>,3,vflatten(mean(pctcorrect,3)),[50 80],jet(256),[],Lookup);
+colorbar;  <span class="comment">% since cvnlookup shows RGB images, we have to explicitly set the colormap</span>
+colormap(jet);
+caxis([50 80]);
+</pre><pre class="codeoutput">Warning: Image is too big to fit on screen; displaying at 67% 
+</pre><img vspace="5" hspace="5" src="example08_simplecontrastmvpa_02.png" alt=""> <pre class="codeinput"><span class="comment">% Notice that the spatial patterns of results are similar to those found in Example 7.</span>
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Example 8: A simple example of MVPA on the NSD betas
+
+%% Introduction
+
+% In this script, we perform an analysis that has parallels to the analysis 
+% demonstrated in the Example 7 script. Whereas in that script we perform a 
+% t-test to determine brain regions that show differential activity to 
+% faces vs. non-faces, in this script we perform so-called
+% 'multivariate pattern analysis' (MVPA) in which we use a statistical
+% classifier in an attempt to decode, given activity in a set of voxels,
+% whether the presented stimulus was a face or non-face. The main
+% differences across the two approaches is (1) the direction of the
+% statistical mapping learned and (2) the fact that MVPA is typically 
+% used to analyze many voxels at the same time whereas the t-test
+% operates on single voxels at a time.
+%
+% The example below also demonstrates the analysis approach termed 
+% 'searchlight'; in this approach, analysis is performed throughout
+% the brain, but using small groups of voxels that are extracted 
+% at different brain locations.
+%
+% Skills/concepts:
+% - MVPA, searchlight
+% - Dealing with surface representations
+% - Dealing with subsampled surfaces (e.g. fsaverage5)
+
+
+
+%% General setup
+
+% define
+expfile = '~/nsd/nsddata/experiments/nsd/nsd_expdesign.mat';
+nsess = 2;                 % how many of the first N NSD sessions to consider
+betaver = 'betas_fithrf';  % which beta version to load
+radius = 3;                % searchlight radius on fsaverage
+fsalt = 'fsaverage5';      % alternative surface for determining searchlight locations
+hemis = {'lh' 'rh'};       % strings referring to left and right hemispheres
+restrictroi = 'gVTC';      % restrict searchlight analysis to this ROI
+restrictroiix = [1];       % index into the ROI
+nfold = 5;                 % how many folds for n-fold cross-validation?
+
+% load
+exp1 = load(expfile);
+
+
+
+%% Load face annotations
+
+% load automated outputs: simple face count
+a1 = load('~/Dropbox/nsdabudhabi/nsdextensions/NSD_Annotation_Efforts_1.0/Automated/Faces/regcount_mode1.mat');
+
+
+
+%% Load betas prepared in fsaverage space and analyze them
+
+% loop over subjects
+pctcorrect = single([]);  % 164k vertices x 2 hemis x 8 subjects
+for subjix=1:8, subjix
+
+  for hh=1:length(hemis)
+
+    %%% load data
+  
+    % load in all of the betas
+    alldata = single([]);  % 327684 vertices x 750 trials x sessions
+    for sess=1:nsess
+      fprintf('sess%d...',sess);
+      file0 = sprintf('~/nsd/nsddata_betas/ppdata/subj%02d/fsaverage/%s/%s.betas_session%02d.mgh',subjix,betaver,hemis{hh},sess);
+      data = cvnloadmgz(file0);  % 327684 x 1 x 1 x 750
+      alldata(:,:,sess) = single(permute(data,[1 4 2 3]));  % use single to save on memory
+      clear data;
+    end
+
+    % prepare face counts (750 trials x sessions, non-negative integers)  
+    imageix = exp1.subjectim(subjix,exp1.masterordering(1:750*nsess));  % 1 x trials with 73k IDs
+    counts = a1.countval(imageix);    % 1 x trials with face counts
+    counts = reshape(counts,750,[]);  % 750 trials x sessions
+
+    %%% prepare for searchlight
+  
+    % load in ROI labelings (we will use this to restrict searchlight locations)
+    [roimask,roidescription] = cvnroimask('fsaverage',hemis{hh},restrictroi,[],[],'collapsevals');
+
+    % load in surfaces
+    surf    = cvnreadsurface('fsaverage',hemis{hh},'sphere');
+    surfALT = cvnreadsurface(fsalt,      hemis{hh},'sphere');
+    hash    = surf.vertices*[1000 100 1]';    assert(length(unique(hash))==size(surf.vertices,1));
+    hashALT = surfALT.vertices*[1000 100 1]'; assert(length(unique(hashALT))==size(surfALT.vertices,1));
+    XYZ = [surf.vertices ones(size(surf.vertices,1),1)]';  % prepare coordinates as 4 x V
+
+    % for which fsaverage vertices will we perform searchlight analysis?
+    mask = ismember(roimask,restrictroiix) & ...    % only fsaverage vertices within the chosen ROI
+           ismember(hash,hashALT);                  % only fsaverage vertices that are also in the alternative surface
+    mask = find(mask);  % a vector of indices into fsaverage vertices
+    maskALT = [];       % a corresponding vector of indices into the vertices of the alternative surface
+    for mm=1:length(mask)
+      maskALT(mm) = find(ismember(hashALT,hash(mask(mm))));
+    end
+  
+    %%% perform analysis
+  
+    % loop over searchlight locations
+    results = zeros(1,length(mask));  % this will contain pct correct for each searchlight location
+    for ss=1:length(mask)
+      statusdots(ss,length(mask)); 
+    
+      %%% figure out vertices that live within the searchlight
+  
+      % get 3D coordinates
+      coord = surf.vertices(mask(ss),:);  % 1 x 3
+
+      % figure out rotation matrix
+      rotmatrix = xyzrotatetoz(coord);
+
+      % rotate all vertices so that the vertex is along z+ axis
+      XYZ0 = rotmatrix*XYZ;
+
+      % find the vertices above the equator and within radius mm
+      searchix = find((XYZ0(3,:) >= 0) & (XYZ0(1,:).^2 + XYZ0(2,:).^2 <= radius^2));  % a vector of indices into fsaverage
+      
+      % Note that this procedure of selecting vertices within a circle placed on the
+      % fsaverage sphere is only approximate. The fsaverage sphere is not only a 
+      % distorted brain shape (a sphere), it is also only an approximate representation
+      % of the topology of individual subjects. A more accurate method of defining
+      % searchlights would be to compute physical units on the native surface of
+      % individual subjects.
+    
+      %%% get the data
+    
+      thedata = reshape(alldata(searchix,:,:),length(searchix),[]);  % vertices x trials
+    
+      %%% do n-fold cross-validation
+    
+      % obtain cross-validated predictions
+      pred = [];  % 1 x trials with the predicted outcome
+      for ff=1:nfold
+
+        % split into training and testing
+        [testix,~,trainix] = picksubset(1:size(thedata,2),[nfold ff]);
+
+        % train the classifer and obtain predictions
+        sample = thedata(:,testix)';            % testing-trials x vertices
+        training = thedata(:,trainix)';         % training-trials x vertices
+        group = vflatten(counts(trainix)) > 0;  % training-trials x 1 with 0/1 (1 means at least one face)
+        testclass = classify(sample,training,group,'diagLinear');  % testing-trials x 1 with the predictions
+        pred(testix) = testclass;
+        
+        % Note that this is a Naive Bayes classifier, and it is just one of many
+        % possible statistical classifiers that one could use. Common alternatives 
+        % include SVM, LDA, logistic regression, and nearest-centroid classifier.
+        
+      end
+    
+      % calculate percent correct
+      results(ss) = mean( pred(:) == (counts(:) > 0) ) * 100;
+
+    end
+    
+    %%% transform searchlight results to a full fsaverage representation
+
+    % embed searchlight results into a vector for the alternative surface
+    vals = copymatrix(zeros(size(surfALT.vertices,1),1),maskALT,results);
+    
+    % use nearest-neighbor interpolation to map to the fsaverage surface
+    vals = cvntransfertosubject(fsalt,'fsaverage',vals(:),hemis{hh},'nearest','orig','orig');
+
+    % record the results
+    pctcorrect(:,hh,subjix) = vals;
+
+  end
+
+end
+
+
+
+%% Generate cortical map visualizations
+
+% first, we show individual subjects
+Lookup = [];
+figureprep([0 0 1000 700],1);
+for subjix=1:8
+
+  % use ventral inflated view of fsaverage; range 50% to 80%
+  [rawimg,Lookup,rgbimg] = cvnlookup('fsaverage',3,vflatten(pctcorrect(:,:,subjix)), ...
+                                     [50 80],jet(256),[],Lookup,0);
+
+  % write image to disk
+  imwrite(rgbimg,sprintf('facepct_subj%02d.png',subjix));
+  
+  % also place into figure window
+  subplot(2,4,subjix); hold on;
+  imshow(rgbimg);
+  title(sprintf('Subject %d',subjix));
+
+end
+%%
+
+% then, we show the group average
+cvnlookup('fsaverage',3,vflatten(mean(pctcorrect,3)),[50 80],jet(256),[],Lookup);
+colorbar;  % since cvnlookup shows RGB images, we have to explicitly set the colormap
+colormap(jet);
+caxis([50 80]);
+%%
+
+% Notice that the spatial patterns of results are similar to those found in Example 7.
+%%
+
+
+
+##### SOURCE END #####
+--></body></html>

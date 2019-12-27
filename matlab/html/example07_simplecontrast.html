@@ -1,0 +1,541 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Example 7: A simple contrast-based analysis of the NSD betas</title><meta name="generator" content="MATLAB 9.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-12-25"><meta name="DC.source" content="example07_simplecontrast.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Example 7: A simple contrast-based analysis of the NSD betas</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Introduction</a></li><li><a href="#2">General setup</a></li><li><a href="#3">Load face annotations</a></li><li><a href="#4">Load betas prepared in fsaverage space and analyze them</a></li><li><a href="#5">Generate cortical map visualizations</a></li><li><a href="#10">Use line plots to better understand the cortical maps</a></li></ul></div><h2 id="1">Introduction</h2><pre class="codeinput"><span class="comment">% In this script, we demonstrate a simple analysis of the NSD betas. The analysis</span>
+<span class="comment">% is based on the actual content of the NSD images --- specifically, we make use of</span>
+<span class="comment">% face annotations that were generated as part of "NSD_Annotation_Efforts_1.0",</span>
+<span class="comment">% which is an extension to the NSD data (it is not officially part of the</span>
+<span class="comment">% prepared NSD data). The analysis itself is very simple (essentially just a</span>
+<span class="comment">% t-test), but this script goes through a number of important points.</span>
+<span class="comment">%</span>
+<span class="comment">% Skills/concepts:</span>
+<span class="comment">% - Memory management</span>
+<span class="comment">% - Resampling strategies (split-half, shuffle/permutation)</span>
+<span class="comment">% - Using line plots to better understand cortical map visualizations</span>
+</pre><h2 id="2">General setup</h2><pre class="codeinput"><span class="comment">% define</span>
+expfile = <span class="string">'~/nsd/nsddata/experiments/nsd/nsd_expdesign.mat'</span>;
+nsess = 2;                 <span class="comment">% how many of the first N NSD sessions to consider (must be &gt;= 2)</span>
+betaver = <span class="string">'betas_fithrf'</span>;  <span class="comment">% which beta version to load</span>
+
+<span class="comment">% load</span>
+exp1 = load(expfile);
+</pre><h2 id="3">Load face annotations</h2><pre class="codeinput"><span class="comment">% load automated outputs: simple face count</span>
+a1 = load(<span class="string">'~/Dropbox/nsdabudhabi/nsdextensions/NSD_Annotation_Efforts_1.0/Automated/Faces/regcount_mode1.mat'</span>);
+</pre><h2 id="4">Load betas prepared in fsaverage space and analyze them</h2><pre class="codeinput"><span class="comment">% The large scale of the NSD data comes with pain points. One is memory usage.</span>
+<span class="comment">% Unless you have large amounts of RAM, it may be impossible to hold all of</span>
+<span class="comment">% the relevant data in RAM at a single time. Thus, one may need to analyze</span>
+<span class="comment">% the data in chunks. In this script, we will process each subject one at a</span>
+<span class="comment">% time and only keep in RAM the relevant analysis outputs (not the data).</span>
+<span class="comment">%</span>
+<span class="comment">% Designing code to handle memory well is not trivial. One must have a birds-eye</span>
+<span class="comment">% perspective on the architecture of the analysis, the memory usage, and the</span>
+<span class="comment">% exact quantities that need to be computed. One wants to make sure that all</span>
+<span class="comment">% of the necessary analysis outputs are computed before one gets rid of the</span>
+<span class="comment">% data to make room for new edata. Since loading data from disk is expensive</span>
+<span class="comment">% in terms of execution time, ideally, code would be written correctly up front.</span>
+
+<span class="comment">% loop over subjects</span>
+tvals = single([]);  <span class="comment">% vertices x 4 x subjects (full, odd, even, shuffle)</span>
+mns = single([]);    <span class="comment">% vertices x 2 x subjects (face, non-face)</span>
+ses = single([]);    <span class="comment">% vertices x 2 x subjects (face, non-face)</span>
+<span class="keyword">for</span> subjix=1:8, subjix
+
+  <span class="comment">% load in all of the betas</span>
+  alldata = single([]);  <span class="comment">% 327684 vertices x 750 trials x sessions</span>
+  <span class="keyword">for</span> sess=1:nsess
+    fprintf(<span class="string">'sess%d...'</span>,sess);
+    file0 = sprintf(<span class="string">'~/nsd/nsddata_betas/ppdata/subj%02d/fsaverage/%s/*.betas_session%02d.*'</span>,subjix,betaver,sess);
+    data = cvnloadmgz(file0);  <span class="comment">% 327684 x 1 x 1 x 750</span>
+    alldata(:,:,sess) = single(permute(data,[1 4 2 3]));  <span class="comment">% use single to save on memory</span>
+    clear <span class="string">data</span>;
+  <span class="keyword">end</span>
+
+  <span class="comment">% at this point, the betas are in units of percent signal change.</span>
+  <span class="comment">% to deal with gross session differences, you may want to consider</span>
+  <span class="comment">% z-scoring the betas from each session (on a per-voxel basis).</span>
+
+  <span class="comment">% prepare face counts (750 trials x sessions, non-negative integers)</span>
+  imageix = exp1.subjectim(subjix,exp1.masterordering(1:750*nsess));  <span class="comment">% 1 x trials with 73k IDs</span>
+  counts = a1.countval(imageix);    <span class="comment">% 1 x trials with face counts</span>
+  counts = reshape(counts,750,[]);  <span class="comment">% 750 trials x sessions</span>
+
+  <span class="comment">% compute t-value for faces vs. non-faces</span>
+  counts0 = counts;
+  [mn1,se1] = meanandse(alldata(:,flatten(counts)&gt;0),2);   <span class="comment">% at least one face</span>
+  [mn2,se2] = meanandse(alldata(:,flatten(counts)==0),2);  <span class="comment">% no faces</span>
+  tvals(:,1,subjix) = (mn1 - mn2) ./ sqrt(se1.^2 + se2.^2);
+    <span class="comment">% we also save the means and std errs for this case</span>
+  mns(:,1,subjix) = mn1;
+  mns(:,2,subjix) = mn2;
+  ses(:,1,subjix) = se1;
+  ses(:,2,subjix) = se2;
+
+  <span class="comment">% compute t-value for odd sessions</span>
+  counts0 = counts;
+  counts0(:,2:2:end) = NaN;  <span class="comment">% set even sessions to NaNs (the NaNs will not satisfy the logical operators)</span>
+  [mn1,se1] = meanandse(alldata(:,flatten(counts0)&gt;0),2);   <span class="comment">% at least one face</span>
+  [mn2,se2] = meanandse(alldata(:,flatten(counts0)==0),2);  <span class="comment">% no faces</span>
+  tvals(:,2,subjix) = (mn1 - mn2) ./ sqrt(se1.^2 + se2.^2);
+
+  <span class="comment">% compute t-value for even sessions</span>
+  counts0 = counts;
+  counts0(:,1:2:end) = NaN;  <span class="comment">% set odd sessions to NaNs (the NaNs will not satisfy the logical operators)</span>
+  [mn1,se1] = meanandse(alldata(:,flatten(counts0)&gt;0),2);   <span class="comment">% at least one face</span>
+  [mn2,se2] = meanandse(alldata(:,flatten(counts0)==0),2);  <span class="comment">% no faces</span>
+  tvals(:,3,subjix) = (mn1 - mn2) ./ sqrt(se1.^2 + se2.^2);
+
+  <span class="comment">% shuffle labels and re-analyze</span>
+  <span class="keyword">for</span> shuffle=1:1  <span class="comment">% here, we do just one, but one can adapt this to do many</span>
+    counts0 = permutedim(counts,0);
+    [mn1,se1] = meanandse(alldata(:,flatten(counts0)&gt;0),2);   <span class="comment">% at least one face</span>
+    [mn2,se2] = meanandse(alldata(:,flatten(counts0)==0),2);  <span class="comment">% no faces</span>
+    tvals(:,3+shuffle,subjix) = (mn1 - mn2) ./ sqrt(se1.^2 + se2.^2);
+  <span class="keyword">end</span>
+
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">
+subjix =
+
+     1
+
+sess1...sess2...
+subjix =
+
+     2
+
+sess1...sess2...
+subjix =
+
+     3
+
+sess1...sess2...
+subjix =
+
+     4
+
+sess1...sess2...
+subjix =
+
+     5
+
+sess1...sess2...
+subjix =
+
+     6
+
+sess1...sess2...
+subjix =
+
+     7
+
+sess1...sess2...
+subjix =
+
+     8
+
+sess1...sess2...</pre><h2 id="5">Generate cortical map visualizations</h2><pre class="codeinput"><span class="comment">% loop through each of the 4 analysis results (full, odd, even, shuffle)</span>
+Lookup = [];
+titlestr = {<span class="string">'All'</span> <span class="string">'Odd'</span> <span class="string">'Even'</span> <span class="string">'Shuffle'</span>};
+<span class="keyword">for</span> typ=1:size(tvals,2)
+
+  figureprep([0 0 1000 700],1);
+  <span class="keyword">for</span> subjix=1:8
+
+    <span class="comment">% use ventral inflated view of fsaverage; range -10 to 10;</span>
+    <span class="comment">% threshold values that are less than 3 and greater than -3</span>
+    [rawimg,Lookup,rgbimg] = cvnlookup(<span class="string">'fsaverage'</span>,3,tvals(:,typ,subjix),[-10 10],cmapsign4(256),3*j,Lookup,0);
+
+    <span class="comment">% write image to disk</span>
+    imwrite(rgbimg,sprintf(<span class="string">'facetval_typ%02d_subj%02d.png'</span>,typ,subjix));
+
+    <span class="comment">% also place into figure window</span>
+    subplot(2,4,subjix); hold <span class="string">on</span>;
+    imshow(rgbimg);
+    <span class="keyword">if</span> subjix==1
+      title(sprintf(<span class="string">'%s; Subject %d'</span>,titlestr{typ},subjix));
+    <span class="keyword">else</span>
+      title(sprintf(<span class="string">'Subject %d'</span>,subjix));
+    <span class="keyword">end</span>
+
+  <span class="keyword">end</span>
+
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="example07_simplecontrast_01.png" alt=""> <img vspace="5" hspace="5" src="example07_simplecontrast_02.png" alt=""> <img vspace="5" hspace="5" src="example07_simplecontrast_03.png" alt=""> <img vspace="5" hspace="5" src="example07_simplecontrast_04.png" alt=""> <pre class="codeinput"><span class="comment">% Notice that even though the subjects are in fsaverage space, there is</span>
+<span class="comment">% substantial variability in the location of face-selective cortex.</span>
+</pre><pre class="codeinput"><span class="comment">% Notice that there is high consistency across the Odd and Even analyses.</span>
+</pre><pre class="codeinput"><span class="comment">% Notice that the shuffle analysis produces very few statistically significant</span>
+<span class="comment">% regions (this is good). The null hypothesis embodied by this analysis is that</span>
+<span class="comment">% there is no relationship between the faces vs. non-faces categorization and the</span>
+<span class="comment">% brain data. The shuffling analysis has the nice property that it is closely</span>
+<span class="comment">% matched to the actual empirical data (it has the same exact numerical values;</span>
+<span class="comment">% the order is simply scrambled).</span>
+<span class="comment">%</span>
+<span class="comment">% The visualization is thresholded at |t|&gt;3, and under this threshold,</span>
+<span class="comment">% there are still a few false positives that occur. Note that one could do</span>
+<span class="comment">% more extensive NHST quantification, such as performing many shuffles and</span>
+<span class="comment">% calculating some metric of the results (e.g. number of vertices that achieve</span>
+<span class="comment">% significance). Also, note that the issues here are closely related to</span>
+<span class="comment">% family-wise error rate and false discovery rate, but we won't go into</span>
+<span class="comment">% those issues here.</span>
+</pre><h2 id="10">Use line plots to better understand the cortical maps</h2><pre class="codeinput"><span class="comment">% plot the Full result, averaged across subjects</span>
+[rawimg,Lookup,rgbimg] = cvnlookup(<span class="string">'fsaverage'</span>,3,mean(tvals(:,1,:),3),[-10 10],cmapsign4(256),3*j,Lookup,0);
+
+<span class="comment">% put up the image</span>
+hmapfig = figure;
+himg = imshow(rgbimg);
+</pre><pre class="codeoutput">Warning: Image is too big to fit on screen; displaying at 67% 
+</pre><img vspace="5" hspace="5" src="example07_simplecontrast_05.png" alt=""> <pre class="codeinput"><span class="comment">% draw a line on the right hemisphere from left to right,</span>
+<span class="comment">% through the middle of the large yellow region</span>
+<span class="keyword">if</span> 0
+  <span class="comment">% ask the user to draw a line (green=start, red=end)</span>
+  xypoints = []; <span class="comment">% Note: can provide initial xypoints as Nx2 matrix of pixel coords</span>
+  [xypoints,xyline] = roiline(hmapfig,[],xypoints);
+
+  <span class="comment">% we now have:</span>
+  <span class="comment">% xypoints = Nx2 pixel coords of line segment endpoints that the user defined/clicked (decimal)</span>
+  <span class="comment">% xyline = Vx2 pixel coords of ALL pixel centers along the defined line segments (integer)</span>
+<span class="keyword">end</span>
+
+<span class="comment">% to allow automated execution, we embed the above code in an if-statement</span>
+<span class="comment">% and provide the following hard-coded values:</span>
+xypoints = [75.7499999999999 668.75;146.25 658.25];
+xyline = [76 669;77 669;78 668;79 668;80 668;81 668;82 668;83 668;84 667;85 667;86 667;87 667;88 667;89 667;90 667;91 666;92 666;93 666;94 666;95 666;96 666;97 666;98 665;99 665;100 665;101 665;102 665;103 665;104 665;105 664;106 664;107 664;108 664;109 664;110 664;111 663;112 663;113 663;114 663;115 663;116 663;117 663;118 662;119 662;120 662;121 662;122 662;123 662;124 662;125 661;126 661;127 661;128 661;129 661;130 661;131 660;132 660;133 660;134 660;135 660;136 660;137 660;138 659;139 659;140 659;141 659;142 659;143 659;144 659;145 658];
+
+<span class="comment">% convert pixel coords (xyline) to vertex indices via Lookup.</span>
+<span class="comment">% each pixel center is mapped to a single surface vertex (via nearest-neighbor).</span>
+<span class="comment">% vertidx = Vx1 vertex indices (between 1 and numlh+numrh)</span>
+vertidx = spherelookup_imagexy2vertidx(xyline,Lookup);
+
+<span class="comment">% remove repeating vertices</span>
+vertidxU = filterout(removerepeats(vertidx),NaN);
+
+<span class="comment">% let's check the location of these vertices</span>
+cvnlookup(<span class="string">'fsaverage'</span>,3,copymatrix(zeros(size(tvals,1),1),vertidxU,1),[0 1],gray,0.5,Lookup);
+</pre><pre class="codeoutput">Warning: Image is too big to fit on screen; displaying at 67% 
+</pre><img vspace="5" hspace="5" src="example07_simplecontrast_06.png" alt=""> <pre class="codeinput"><span class="comment">% plot some data values along the line (we call this a "line profile").</span>
+<span class="comment">% keep in mind that the line is not necessarily exactly straight, given</span>
+<span class="comment">% that it is constrained to be a series of fsaverage vertices.</span>
+subjix = 1;  <span class="comment">% for simplicity, we will show only subj01</span>
+figure;
+subplot(2,1,1); hold <span class="string">on</span>;
+plot(tvals(vertidxU,1,subjix),<span class="string">'ro-'</span>);
+straightline(0,<span class="string">'h'</span>,<span class="string">'k-'</span>);
+xlabel(<span class="string">'Vertex'</span>);
+ylabel(<span class="string">'t-value'</span>);
+subplot(2,1,2); hold <span class="string">on</span>;
+errorbar3(1:length(vertidxU),mns(vertidxU,1,subjix)',ses(vertidxU,1,subjix)',<span class="string">'v'</span>,[1 .5 .5]);
+errorbar3(1:length(vertidxU),mns(vertidxU,2,subjix)',ses(vertidxU,2,subjix)',<span class="string">'v'</span>,[.5 .5 1]);
+plot(mns(vertidxU,1,subjix),<span class="string">'r-'</span>,<span class="string">'LineWidth'</span>,2);
+plot(mns(vertidxU,2,subjix),<span class="string">'b-'</span>,<span class="string">'LineWidth'</span>,2);
+straightline(0,<span class="string">'h'</span>,<span class="string">'k-'</span>);
+xlabel(<span class="string">'Vertex'</span>);
+ylabel(<span class="string">'BOLD (%)'</span>);
+
+<span class="comment">% We leave it as an exercise for the reader to explore:</span>
+<span class="comment">% (1) expressing cortical distance in mm units</span>
+<span class="comment">% (2) plotting multiple subjects on a single figure</span>
+<span class="comment">% (3) summarizing results across subjects</span>
+</pre><img vspace="5" hspace="5" src="example07_simplecontrast_07.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Example 7: A simple contrast-based analysis of the NSD betas
+
+%% Introduction
+
+% In this script, we demonstrate a simple analysis of the NSD betas. The analysis
+% is based on the actual content of the NSD images REPLACE_WITH_DASH_DASH- specifically, we make use of
+% face annotations that were generated as part of "NSD_Annotation_Efforts_1.0",
+% which is an extension to the NSD data (it is not officially part of the 
+% prepared NSD data). The analysis itself is very simple (essentially just a
+% t-test), but this script goes through a number of important points.
+%
+% Skills/concepts:
+% - Memory management
+% - Resampling strategies (split-half, shuffle/permutation)
+% - Using line plots to better understand cortical map visualizations
+
+
+
+%% General setup
+
+% define
+expfile = '~/nsd/nsddata/experiments/nsd/nsd_expdesign.mat';
+nsess = 2;                 % how many of the first N NSD sessions to consider (must be >= 2)
+betaver = 'betas_fithrf';  % which beta version to load
+
+% load
+exp1 = load(expfile);
+
+
+
+%% Load face annotations
+
+% load automated outputs: simple face count
+a1 = load('~/Dropbox/nsdabudhabi/nsdextensions/NSD_Annotation_Efforts_1.0/Automated/Faces/regcount_mode1.mat');
+
+
+
+%% Load betas prepared in fsaverage space and analyze them
+
+% The large scale of the NSD data comes with pain points. One is memory usage.
+% Unless you have large amounts of RAM, it may be impossible to hold all of 
+% the relevant data in RAM at a single time. Thus, one may need to analyze 
+% the data in chunks. In this script, we will process each subject one at a
+% time and only keep in RAM the relevant analysis outputs (not the data).
+%
+% Designing code to handle memory well is not trivial. One must have a birds-eye
+% perspective on the architecture of the analysis, the memory usage, and the
+% exact quantities that need to be computed. One wants to make sure that all
+% of the necessary analysis outputs are computed before one gets rid of the
+% data to make room for new edata. Since loading data from disk is expensive 
+% in terms of execution time, ideally, code would be written correctly up front.
+
+% loop over subjects
+tvals = single([]);  % vertices x 4 x subjects (full, odd, even, shuffle)
+mns = single([]);    % vertices x 2 x subjects (face, non-face)
+ses = single([]);    % vertices x 2 x subjects (face, non-face)
+for subjix=1:8, subjix
+  
+  % load in all of the betas
+  alldata = single([]);  % 327684 vertices x 750 trials x sessions
+  for sess=1:nsess
+    fprintf('sess%d...',sess);
+    file0 = sprintf('~/nsd/nsddata_betas/ppdata/subj%02d/fsaverage/%s/*.betas_session%02d.*',subjix,betaver,sess);
+    data = cvnloadmgz(file0);  % 327684 x 1 x 1 x 750
+    alldata(:,:,sess) = single(permute(data,[1 4 2 3]));  % use single to save on memory
+    clear data;
+  end
+  
+  % at this point, the betas are in units of percent signal change.
+  % to deal with gross session differences, you may want to consider
+  % z-scoring the betas from each session (on a per-voxel basis).
+
+  % prepare face counts (750 trials x sessions, non-negative integers)  
+  imageix = exp1.subjectim(subjix,exp1.masterordering(1:750*nsess));  % 1 x trials with 73k IDs
+  counts = a1.countval(imageix);    % 1 x trials with face counts
+  counts = reshape(counts,750,[]);  % 750 trials x sessions
+
+  % compute t-value for faces vs. non-faces
+  counts0 = counts;
+  [mn1,se1] = meanandse(alldata(:,flatten(counts)>0),2);   % at least one face
+  [mn2,se2] = meanandse(alldata(:,flatten(counts)==0),2);  % no faces
+  tvals(:,1,subjix) = (mn1 - mn2) ./ sqrt(se1.^2 + se2.^2);
+    % we also save the means and std errs for this case
+  mns(:,1,subjix) = mn1;
+  mns(:,2,subjix) = mn2;
+  ses(:,1,subjix) = se1;
+  ses(:,2,subjix) = se2;
+
+  % compute t-value for odd sessions
+  counts0 = counts;
+  counts0(:,2:2:end) = NaN;  % set even sessions to NaNs (the NaNs will not satisfy the logical operators)
+  [mn1,se1] = meanandse(alldata(:,flatten(counts0)>0),2);   % at least one face
+  [mn2,se2] = meanandse(alldata(:,flatten(counts0)==0),2);  % no faces
+  tvals(:,2,subjix) = (mn1 - mn2) ./ sqrt(se1.^2 + se2.^2);
+
+  % compute t-value for even sessions
+  counts0 = counts;
+  counts0(:,1:2:end) = NaN;  % set odd sessions to NaNs (the NaNs will not satisfy the logical operators)
+  [mn1,se1] = meanandse(alldata(:,flatten(counts0)>0),2);   % at least one face
+  [mn2,se2] = meanandse(alldata(:,flatten(counts0)==0),2);  % no faces
+  tvals(:,3,subjix) = (mn1 - mn2) ./ sqrt(se1.^2 + se2.^2);
+
+  % shuffle labels and re-analyze  
+  for shuffle=1:1  % here, we do just one, but one can adapt this to do many
+    counts0 = permutedim(counts,0);
+    [mn1,se1] = meanandse(alldata(:,flatten(counts0)>0),2);   % at least one face
+    [mn2,se2] = meanandse(alldata(:,flatten(counts0)==0),2);  % no faces
+    tvals(:,3+shuffle,subjix) = (mn1 - mn2) ./ sqrt(se1.^2 + se2.^2);
+  end
+
+end
+
+
+
+%% Generate cortical map visualizations
+
+% loop through each of the 4 analysis results (full, odd, even, shuffle)
+Lookup = [];
+titlestr = {'All' 'Odd' 'Even' 'Shuffle'};
+for typ=1:size(tvals,2)
+
+  figureprep([0 0 1000 700],1);
+  for subjix=1:8
+
+    % use ventral inflated view of fsaverage; range -10 to 10;
+    % threshold values that are less than 3 and greater than -3
+    [rawimg,Lookup,rgbimg] = cvnlookup('fsaverage',3,tvals(:,typ,subjix),[-10 10],cmapsign4(256),3*j,Lookup,0);
+
+    % write image to disk
+    imwrite(rgbimg,sprintf('facetval_typ%02d_subj%02d.png',typ,subjix));
+    
+    % also place into figure window
+    subplot(2,4,subjix); hold on;
+    imshow(rgbimg);
+    if subjix==1
+      title(sprintf('%s; Subject %d',titlestr{typ},subjix));
+    else
+      title(sprintf('Subject %d',subjix));
+    end
+
+  end
+
+end
+%%
+
+% Notice that even though the subjects are in fsaverage space, there is
+% substantial variability in the location of face-selective cortex.
+%%
+
+% Notice that there is high consistency across the Odd and Even analyses.
+%%
+
+% Notice that the shuffle analysis produces very few statistically significant
+% regions (this is good). The null hypothesis embodied by this analysis is that 
+% there is no relationship between the faces vs. non-faces categorization and the
+% brain data. The shuffling analysis has the nice property that it is closely
+% matched to the actual empirical data (it has the same exact numerical values;
+% the order is simply scrambled).
+%
+% The visualization is thresholded at |t|>3, and under this threshold, 
+% there are still a few false positives that occur. Note that one could do 
+% more extensive NHST quantification, such as performing many shuffles and 
+% calculating some metric of the results (e.g. number of vertices that achieve 
+% significance). Also, note that the issues here are closely related to 
+% family-wise error rate and false discovery rate, but we won't go into
+% those issues here.
+%%
+
+
+
+%% Use line plots to better understand the cortical maps
+
+% plot the Full result, averaged across subjects
+[rawimg,Lookup,rgbimg] = cvnlookup('fsaverage',3,mean(tvals(:,1,:),3),[-10 10],cmapsign4(256),3*j,Lookup,0);
+
+% put up the image
+hmapfig = figure;
+himg = imshow(rgbimg);
+%%
+
+% draw a line on the right hemisphere from left to right,
+% through the middle of the large yellow region
+if 0
+  % ask the user to draw a line (green=start, red=end)
+  xypoints = []; % Note: can provide initial xypoints as Nx2 matrix of pixel coords
+  [xypoints,xyline] = roiline(hmapfig,[],xypoints);
+
+  % we now have:
+  % xypoints = Nx2 pixel coords of line segment endpoints that the user defined/clicked (decimal)
+  % xyline = Vx2 pixel coords of ALL pixel centers along the defined line segments (integer)
+end
+
+% to allow automated execution, we embed the above code in an if-statement
+% and provide the following hard-coded values:
+xypoints = [75.7499999999999 668.75;146.25 658.25];
+xyline = [76 669;77 669;78 668;79 668;80 668;81 668;82 668;83 668;84 667;85 667;86 667;87 667;88 667;89 667;90 667;91 666;92 666;93 666;94 666;95 666;96 666;97 666;98 665;99 665;100 665;101 665;102 665;103 665;104 665;105 664;106 664;107 664;108 664;109 664;110 664;111 663;112 663;113 663;114 663;115 663;116 663;117 663;118 662;119 662;120 662;121 662;122 662;123 662;124 662;125 661;126 661;127 661;128 661;129 661;130 661;131 660;132 660;133 660;134 660;135 660;136 660;137 660;138 659;139 659;140 659;141 659;142 659;143 659;144 659;145 658];
+
+% convert pixel coords (xyline) to vertex indices via Lookup.
+% each pixel center is mapped to a single surface vertex (via nearest-neighbor).
+% vertidx = Vx1 vertex indices (between 1 and numlh+numrh)
+vertidx = spherelookup_imagexy2vertidx(xyline,Lookup);
+
+% remove repeating vertices
+vertidxU = filterout(removerepeats(vertidx),NaN);
+
+% let's check the location of these vertices
+cvnlookup('fsaverage',3,copymatrix(zeros(size(tvals,1),1),vertidxU,1),[0 1],gray,0.5,Lookup);
+%%
+
+% plot some data values along the line (we call this a "line profile").
+% keep in mind that the line is not necessarily exactly straight, given
+% that it is constrained to be a series of fsaverage vertices.
+subjix = 1;  % for simplicity, we will show only subj01
+figure;
+subplot(2,1,1); hold on;
+plot(tvals(vertidxU,1,subjix),'ro-');
+straightline(0,'h','k-');
+xlabel('Vertex');
+ylabel('t-value');
+subplot(2,1,2); hold on;
+errorbar3(1:length(vertidxU),mns(vertidxU,1,subjix)',ses(vertidxU,1,subjix)','v',[1 .5 .5]);
+errorbar3(1:length(vertidxU),mns(vertidxU,2,subjix)',ses(vertidxU,2,subjix)','v',[.5 .5 1]);
+plot(mns(vertidxU,1,subjix),'r-','LineWidth',2);
+plot(mns(vertidxU,2,subjix),'b-','LineWidth',2);
+straightline(0,'h','k-');
+xlabel('Vertex');
+ylabel('BOLD (%)');
+
+% We leave it as an exercise for the reader to explore:
+% (1) expressing cortical distance in mm units
+% (2) plotting multiple subjects on a single figure
+% (3) summarizing results across subjects
+
+
+
+##### SOURCE END #####
+--></body></html>

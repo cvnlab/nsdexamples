@@ -1,0 +1,464 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Example 6: Basic loading and inspection of NSD betas</title><meta name="generator" content="MATLAB 9.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-12-25"><meta name="DC.source" content="example06_basicbetaloading.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Example 6: Basic loading and inspection of NSD betas</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Introduction</a></li><li><a href="#2">General setup</a></li><li><a href="#3">Define ROI</a></li><li><a href="#4">Load in the betas</a></li><li><a href="#5">Inspect the data</a></li><li><a href="#11">Load in experiment information</a></li><li><a href="#13">Visualize ROI-averaged responses</a></li><li><a href="#15">Look at best and worst images</a></li></ul></div><h2 id="1">Introduction</h2><pre class="codeinput"><span class="comment">% In this script, we go through an example of loading and inspecting the NSD betas.</span>
+<span class="comment">%</span>
+<span class="comment">% Skills/concepts:</span>
+<span class="comment">% - Thinking about data units</span>
+<span class="comment">% - Data visualization</span>
+<span class="comment">% - Simple ROI definition</span>
+<span class="comment">% - Non-trivial indexing into the NSD data</span>
+</pre><h2 id="2">General setup</h2><pre class="codeinput"><span class="comment">% define</span>
+stimfile = <span class="string">'~/nsd/nsddata_stimuli/stimuli/nsd/nsd_stimuli.hdf5'</span>;
+expfile = <span class="string">'~/nsd/nsddata/experiments/nsd/nsd_expdesign.mat'</span>;
+subjix = 3;                <span class="comment">% which NSD subject we are analyzing</span>
+nsess = 32;                <span class="comment">% how many NSD sessions are available</span>
+betaver = <span class="string">'betas_fithrf'</span>;  <span class="comment">% which beta version to load</span>
+</pre><h2 id="3">Define ROI</h2><pre class="codeinput"><span class="comment">% We are going to examine NSD betas for one region of interest (ROI).</span>
+<span class="comment">% Specifically, right hemisphere (RH) fusiform face area (FFA).</span>
+<span class="comment">% Here, we go through one approach for defining that region.</span>
+
+<span class="comment">% load in t-values for faces vs. nonfaces from the floc experiment</span>
+a1 = load_untouch_nii(sprintf(<span class="string">'~/nsd/nsddata/ppdata/subj%02d/func1pt8mm/floc_facestval.nii.gz'</span>,subjix));
+
+<span class="comment">% in ITK-SNAP, look at the NIFTI file and determine a small box in</span>
+<span class="comment">% the appropriate anatomical location and containing high t-values (e.g. &gt; 5)</span>
+lrix = 58:66;  <span class="comment">% from left to right</span>
+paix = 31:54;  <span class="comment">% from posterior to anterior</span>
+isix = 25:32;  <span class="comment">% from inferior to superior</span>
+
+<span class="comment">% note that this a rough-and-ready approach to defining the ROI. it is</span>
+<span class="comment">% sufficient for the sake of this example, but a more accurate approach</span>
+<span class="comment">% would be to examine the data on the cortical surface.</span>
+
+<span class="comment">% create a binary volume with the box</span>
+boxvol = zeros(size(a1.img));
+boxvol(lrix,paix,isix) = 1;
+
+<span class="comment">% define the ROI as within the box AND t &gt; 5</span>
+mask = boxvol &amp; a1.img &gt; 5;
+
+<span class="comment">% to aid in loading the data, compute a tight fitting box and associated indices</span>
+[d1,d2,d3,ii] = computebrickandindices(mask);
+</pre><h2 id="4">Load in the betas</h2><pre class="codeinput"><span class="comment">% load data</span>
+data = [];  <span class="comment">% voxels x 750 trials x sessions</span>
+<span class="keyword">for</span> p=1:nsess
+  fprintf(<span class="string">'sess %d...'</span>,p);
+  file0 = sprintf(<span class="string">'~/nsd/nsddata_betas/ppdata/subj%02d/func1pt8mm/%s/betas_session%02d.mat'</span>,subjix,betaver,p);
+  a1 = matfile(file0);
+  temp = double(a1.betas(d1,d2,d3,:))/300;  <span class="comment">% convert to double and then convert to percent signal change</span>
+  temp = squish(temp,3);                    <span class="comment">% flatten voxels</span>
+  temp = temp(ii,:);                        <span class="comment">% extract the voxels we want</span>
+  data(:,:,p) = temp;                       <span class="comment">% record</span>
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">sess 1...sess 2...sess 3...sess 4...sess 5...sess 6...sess 7...sess 8...sess 9...sess 10...sess 11...sess 12...sess 13...sess 14...sess 15...sess 16...sess 17...sess 18...sess 19...sess 20...sess 21...sess 22...sess 23...sess 24...sess 25...sess 26...sess 27...sess 28...sess 29...sess 30...sess 31...sess 32...</pre><h2 id="5">Inspect the data</h2><pre class="codeinput"><span class="comment">% visualize data in original units (percent signal change)</span>
+figure; hold <span class="string">on</span>;
+imagesc(reshape(data,size(data,1),[]),[-10 10]);
+axis <span class="string">ij</span> <span class="string">tight</span>;
+colormap(cmapsign4); colorbar;
+xlabel(<span class="string">'Trial'</span>);
+ylabel(<span class="string">'Voxel'</span>);
+title(<span class="string">'Response (% BOLD)'</span>);
+</pre><img vspace="5" hspace="5" src="example06_basicbetaloading_01.png" alt=""> <pre class="codeinput"><span class="comment">% Notice the high heterogeneity across voxels.</span>
+</pre><pre class="codeinput"><span class="comment">% visualize each voxel's mean PSC</span>
+figure; hold <span class="string">on</span>;
+bar(mean(mean(data,2),3));
+xlabel(<span class="string">'Voxel'</span>);
+ylabel(<span class="string">'Average response (% BOLD)'</span>);
+</pre><img vspace="5" hspace="5" src="example06_basicbetaloading_02.png" alt=""> <pre class="codeinput"><span class="comment">% This reinforces the point: voxels have highly different overall BOLD responses.</span>
+</pre><pre class="codeinput"><span class="comment">% on a per-voxel basis, z-score the betas obtained in each session.</span>
+<span class="comment">% this is a fairly drastic measure, but ensures stationarity across time</span>
+<span class="comment">% and comparable units across voxels.</span>
+dataZ = calczscore(data,2);
+
+<span class="comment">% visualize data again in z-score units</span>
+figure; hold <span class="string">on</span>;
+imagesc(reshape(dataZ,size(dataZ,1),[]),[-3 3]);
+axis <span class="string">ij</span> <span class="string">tight</span>;
+colormap(cmapsign4); colorbar;
+xlabel(<span class="string">'Trial'</span>);
+ylabel(<span class="string">'Voxel'</span>);
+title(<span class="string">'Response (z-score units)'</span>);
+</pre><img vspace="5" hspace="5" src="example06_basicbetaloading_03.png" alt=""> <h2 id="11">Load in experiment information</h2><pre class="codeinput"><span class="comment">% load</span>
+exp1 = load(expfile);
+theorder = exp1.masterordering(1:750*nsess);  <span class="comment">% the trials that we have data for</span>
+uniqueix = union(theorder,[]);                <span class="comment">% unique indices into the 10k</span>
+length(theorder)  <span class="comment">% total number of trials</span>
+length(uniqueix)  <span class="comment">% total number of unique images</span>
+</pre><pre class="codeoutput">
+ans =
+
+       24000
+
+
+ans =
+
+        9411
+
+</pre><h2 id="13">Visualize ROI-averaged responses</h2><pre class="codeinput"><span class="comment">% define</span>
+numtodo = 100;  <span class="comment">% number of distinct images to plot responses for</span>
+
+<span class="comment">% massage dimensionality</span>
+dataZ = reshape(dataZ,size(dataZ,1),[]);  <span class="comment">% voxels x trials*sessions</span>
+
+<span class="comment">% make the plot</span>
+todo = picksubset(uniqueix,numtodo);  <span class="comment">% pick a small subset to plot</span>
+versions = {<span class="string">'Regular'</span> <span class="string">'Shuffled'</span>};
+<span class="keyword">for</span> ver=1:2
+  figureprep([100 100 1000 300],1); hold <span class="string">on</span>;
+  avgresp = [];
+  <span class="keyword">for</span> p=1:length(todo)
+    <span class="keyword">switch</span> ver
+    <span class="keyword">case</span> 1
+      ix = find(theorder==todo(p));              <span class="comment">% which trials correspond to the image</span>
+    <span class="keyword">case</span> 2
+      ix = find(permutedim(theorder==todo(p)));  <span class="comment">% SHUFFLE!</span>
+    <span class="keyword">end</span>
+    yy = mean(dataZ(:,ix),1);      <span class="comment">% compute ROI average for each trial</span>
+    scatter(repmat(p,[1 length(yy)]),yy,<span class="string">'ro'</span>);
+    avgresp(p) = mean(yy);
+  <span class="keyword">end</span>
+  h = plot(1:length(todo),avgresp,<span class="string">'ko-'</span>);
+  set(h,<span class="string">'MarkerFaceColor'</span>,<span class="string">'k'</span>);
+  ax = axis;
+  axis([ax(1:2) -2 2]);
+  xlabel(<span class="string">'Image'</span>);
+  ylabel(<span class="string">'Response (z-score units)'</span>);
+  title(versions{ver});
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="example06_basicbetaloading_04.png" alt=""> <img vspace="5" hspace="5" src="example06_basicbetaloading_05.png" alt=""> <pre class="codeinput"><span class="comment">% In the 'Regular' plot, we are looking for small within-image variability</span>
+<span class="comment">% compared to the across-image variability. The 'Shuffled' plot looks slightly</span>
+<span class="comment">% different compared to the 'Regular' plot, indicating that the image-evoked</span>
+<span class="comment">% signal in the data is fairly weak. This is expected given the noise in fMRI</span>
+<span class="comment">% data, the fact that an aggressive rapid event-related design was used in NSD</span>
+<span class="comment">% (where responses to successive trials overlap substantially), and the small</span>
+<span class="comment">% number of trials per distinct image that was used in the design.</span>
+</pre><h2 id="15">Look at best and worst images</h2><pre class="codeinput"><span class="comment">% compute the mean across trials only for those images with all 3 trials</span>
+newdata = [];       <span class="comment">% voxels x images with the trial-averaged response</span>
+newdatastim = [];   <span class="comment">% 1 x images with indices into the 10k</span>
+<span class="keyword">for</span> p=1:length(uniqueix)
+  ix = find(theorder==uniqueix(p));
+  <span class="keyword">if</span> length(ix)==3
+    newdata(:,end+1) = mean(dataZ(:,ix),2);
+    newdatastim(end+1) = uniqueix(p);
+  <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="comment">% sort ROI-averaged response in descending order</span>
+[ss,ssix] = sort(mean(newdata,1),<span class="string">'descend'</span>);
+
+<span class="comment">% plot best and worst images</span>
+strs = {<span class="string">'Best'</span> <span class="string">'Worst'</span>};
+<span class="keyword">for</span> flag=1:2
+  figureprep([100 100 1000 300],1);
+  <span class="keyword">for</span> p=1:5
+
+    <span class="comment">% figure out 73k ID</span>
+    <span class="keyword">switch</span> flag
+    <span class="keyword">case</span> 1
+      id73k = exp1.subjectim(subjix,newdatastim(ssix(p)));
+    <span class="keyword">case</span> 2
+      id73k = exp1.subjectim(subjix,newdatastim(ssix(end-p+1)));
+    <span class="keyword">end</span>
+
+    <span class="comment">% get image (425 x 425 x 3, uint8)</span>
+    im = permute(h5read(stimfile,<span class="string">'/imgBrick'</span>,[1 1 1 id73k],[3 425 425 1]),[3 2 1]);
+
+    <span class="comment">% plot it</span>
+    subplot(1,5,p);
+    imshow(im);
+    <span class="keyword">if</span> p==1
+      title(strs{flag});
+    <span class="keyword">end</span>
+
+  <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="example06_basicbetaloading_06.png" alt=""> <img vspace="5" hspace="5" src="example06_basicbetaloading_07.png" alt=""> <pre class="codeinput"><span class="comment">% As expected, the images that most strongly drove the response tend to have faces.</span>
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Example 6: Basic loading and inspection of NSD betas
+
+%% Introduction
+
+% In this script, we go through an example of loading and inspecting the NSD betas.
+%
+% Skills/concepts:
+% - Thinking about data units
+% - Data visualization
+% - Simple ROI definition
+% - Non-trivial indexing into the NSD data
+
+
+
+%% General setup
+
+% define
+stimfile = '~/nsd/nsddata_stimuli/stimuli/nsd/nsd_stimuli.hdf5';
+expfile = '~/nsd/nsddata/experiments/nsd/nsd_expdesign.mat';
+subjix = 3;                % which NSD subject we are analyzing
+nsess = 32;                % how many NSD sessions are available
+betaver = 'betas_fithrf';  % which beta version to load
+
+
+
+%% Define ROI
+
+% We are going to examine NSD betas for one region of interest (ROI).
+% Specifically, right hemisphere (RH) fusiform face area (FFA).
+% Here, we go through one approach for defining that region.
+
+% load in t-values for faces vs. nonfaces from the floc experiment
+a1 = load_untouch_nii(sprintf('~/nsd/nsddata/ppdata/subj%02d/func1pt8mm/floc_facestval.nii.gz',subjix));
+
+% in ITK-SNAP, look at the NIFTI file and determine a small box in 
+% the appropriate anatomical location and containing high t-values (e.g. > 5)
+lrix = 58:66;  % from left to right
+paix = 31:54;  % from posterior to anterior
+isix = 25:32;  % from inferior to superior
+
+% note that this a rough-and-ready approach to defining the ROI. it is
+% sufficient for the sake of this example, but a more accurate approach 
+% would be to examine the data on the cortical surface.
+
+% create a binary volume with the box
+boxvol = zeros(size(a1.img));
+boxvol(lrix,paix,isix) = 1;
+
+% define the ROI as within the box AND t > 5
+mask = boxvol & a1.img > 5;
+
+% to aid in loading the data, compute a tight fitting box and associated indices
+[d1,d2,d3,ii] = computebrickandindices(mask);
+
+
+
+%% Load in the betas
+
+% load data
+data = [];  % voxels x 750 trials x sessions
+for p=1:nsess
+  fprintf('sess %d...',p);
+  file0 = sprintf('~/nsd/nsddata_betas/ppdata/subj%02d/func1pt8mm/%s/betas_session%02d.mat',subjix,betaver,p);
+  a1 = matfile(file0);
+  temp = double(a1.betas(d1,d2,d3,:))/300;  % convert to double and then convert to percent signal change
+  temp = squish(temp,3);                    % flatten voxels
+  temp = temp(ii,:);                        % extract the voxels we want
+  data(:,:,p) = temp;                       % record
+end
+
+
+
+%% Inspect the data
+
+% visualize data in original units (percent signal change)
+figure; hold on;
+imagesc(reshape(data,size(data,1),[]),[-10 10]);
+axis ij tight;
+colormap(cmapsign4); colorbar;
+xlabel('Trial');
+ylabel('Voxel');
+title('Response (% BOLD)');
+%%
+
+% Notice the high heterogeneity across voxels.
+%%
+
+% visualize each voxel's mean PSC
+figure; hold on;
+bar(mean(mean(data,2),3));
+xlabel('Voxel');
+ylabel('Average response (% BOLD)');
+%%
+
+% This reinforces the point: voxels have highly different overall BOLD responses.
+%%
+
+% on a per-voxel basis, z-score the betas obtained in each session.
+% this is a fairly drastic measure, but ensures stationarity across time
+% and comparable units across voxels.
+dataZ = calczscore(data,2);
+
+% visualize data again in z-score units
+figure; hold on;
+imagesc(reshape(dataZ,size(dataZ,1),[]),[-3 3]);
+axis ij tight;
+colormap(cmapsign4); colorbar;
+xlabel('Trial');
+ylabel('Voxel');
+title('Response (z-score units)');
+%%
+
+
+
+%% Load in experiment information
+
+% load
+exp1 = load(expfile);
+theorder = exp1.masterordering(1:750*nsess);  % the trials that we have data for
+uniqueix = union(theorder,[]);                % unique indices into the 10k
+length(theorder)  % total number of trials
+length(uniqueix)  % total number of unique images
+%%
+
+
+
+%% Visualize ROI-averaged responses
+
+% define
+numtodo = 100;  % number of distinct images to plot responses for
+
+% massage dimensionality
+dataZ = reshape(dataZ,size(dataZ,1),[]);  % voxels x trials*sessions
+
+% make the plot
+todo = picksubset(uniqueix,numtodo);  % pick a small subset to plot
+versions = {'Regular' 'Shuffled'};
+for ver=1:2
+  figureprep([100 100 1000 300],1); hold on;
+  avgresp = [];
+  for p=1:length(todo)
+    switch ver
+    case 1
+      ix = find(theorder==todo(p));              % which trials correspond to the image
+    case 2
+      ix = find(permutedim(theorder==todo(p)));  % SHUFFLE!
+    end
+    yy = mean(dataZ(:,ix),1);      % compute ROI average for each trial
+    scatter(repmat(p,[1 length(yy)]),yy,'ro');
+    avgresp(p) = mean(yy);
+  end
+  h = plot(1:length(todo),avgresp,'ko-');
+  set(h,'MarkerFaceColor','k');
+  ax = axis;
+  axis([ax(1:2) -2 2]);
+  xlabel('Image');
+  ylabel('Response (z-score units)');
+  title(versions{ver});
+end
+%%
+
+% In the 'Regular' plot, we are looking for small within-image variability
+% compared to the across-image variability. The 'Shuffled' plot looks slightly
+% different compared to the 'Regular' plot, indicating that the image-evoked 
+% signal in the data is fairly weak. This is expected given the noise in fMRI
+% data, the fact that an aggressive rapid event-related design was used in NSD 
+% (where responses to successive trials overlap substantially), and the small
+% number of trials per distinct image that was used in the design.
+
+
+
+%% Look at best and worst images
+
+% compute the mean across trials only for those images with all 3 trials
+newdata = [];       % voxels x images with the trial-averaged response
+newdatastim = [];   % 1 x images with indices into the 10k
+for p=1:length(uniqueix)
+  ix = find(theorder==uniqueix(p));
+  if length(ix)==3
+    newdata(:,end+1) = mean(dataZ(:,ix),2);
+    newdatastim(end+1) = uniqueix(p);
+  end
+end
+
+% sort ROI-averaged response in descending order
+[ss,ssix] = sort(mean(newdata,1),'descend');
+
+% plot best and worst images
+strs = {'Best' 'Worst'};
+for flag=1:2
+  figureprep([100 100 1000 300],1);
+  for p=1:5
+    
+    % figure out 73k ID
+    switch flag
+    case 1
+      id73k = exp1.subjectim(subjix,newdatastim(ssix(p)));
+    case 2
+      id73k = exp1.subjectim(subjix,newdatastim(ssix(end-p+1)));
+    end
+
+    % get image (425 x 425 x 3, uint8)
+    im = permute(h5read(stimfile,'/imgBrick',[1 1 1 id73k],[3 425 425 1]),[3 2 1]);
+    
+    % plot it
+    subplot(1,5,p);
+    imshow(im);
+    if p==1
+      title(strs{flag});
+    end
+
+  end
+end
+%%
+
+% As expected, the images that most strongly drove the response tend to have faces.
+
+
+
+##### SOURCE END #####
+--></body></html>

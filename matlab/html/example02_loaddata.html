@@ -1,0 +1,1271 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Example 2: Loading data into MATLAB</title><meta name="generator" content="MATLAB 9.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-12-25"><meta name="DC.source" content="example02_loaddata.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Example 2: Loading data into MATLAB</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Introduction</a></li><li><a href="#2">Miscellaneous data (.mat format)</a></li><li><a href="#4">Text data (.tsv format)</a></li><li><a href="#12">Volume data as NIFTI files (.nii format)</a></li><li><a href="#20">Surface data as MGZ files (.mgz format)</a></li><li><a href="#25">Betas as HDF5 files (.hdf5 format)</a></li><li><a href="#32">Images as PNG files (.png format)</a></li><li><a href="#37">Images in HDF5 format (.hdf5 format)</a></li><li><a href="#40">Cortical surfaces in native FreeSurfer format (lh.white, lh.pial, etc.)</a></li><li><a href="#47">Surface-based ROI files (various formats such as .mgz, .annot, .label)</a></li></ul></div><h2 id="1">Introduction</h2><pre class="codeinput"><span class="comment">% In this script, we are going to go through examples of how</span>
+<span class="comment">% to load various types of data files into MATLAB. Loading data</span>
+<span class="comment">% is the first step before we can do data analysis.</span>
+<span class="comment">%</span>
+<span class="comment">% Skills/concepts:</span>
+<span class="comment">% - File formats</span>
+<span class="comment">% - Thinking about data formats (e.g. double, single, int16)</span>
+<span class="comment">% - Issues specific to NIFTI files</span>
+<span class="comment">% - Issues specific to surfaces</span>
+<span class="comment">% - HDF5-related concepts</span>
+</pre><h2 id="2">Miscellaneous data (.mat format)</h2><pre class="codeinput"><span class="comment">% MATLAB's .mat format is a catch-all format that can hold</span>
+<span class="comment">% all sorts of different kinds of data.</span>
+
+<span class="comment">% Load information pertaining to the experimental</span>
+<span class="comment">% design of the NSD experiment. By assigning the output</span>
+<span class="comment">% of load.m to a variable, we encapsulate the loaded variables</span>
+<span class="comment">% into a struct (thus, leaving the workspace uncluttered).</span>
+a1 = load(<span class="string">'~/nsd/nsddata/experiments/nsd/nsd_expdesign.mat'</span>);
+a1
+</pre><pre class="codeoutput">
+a1 = 
+
+  struct with fields:
+
+          basiccnt: [3x40 double]
+    masterordering: [1x30000 double]
+          sharedix: [1x1000 double]
+       stimpattern: [40x12x75 double]
+         subjectim: [8x10000 double]
+
+</pre><h2 id="4">Text data (.tsv format)</h2><pre class="codeinput"><span class="comment">% Although inefficient in terms of disk space, it is sometimes</span>
+<span class="comment">% convenient to store data in text format. The main advantage is that text</span>
+<span class="comment">% is easy to open (e.g. using a text editor or a spreadsheet program).</span>
+<span class="comment">%</span>
+<span class="comment">% A common format is .tsv (tab-separated values), which is similar</span>
+<span class="comment">% to .csv (comma-separated values).</span>
+<span class="comment">%</span>
+<span class="comment">% Typical things to watch out for include: making sure that any descriptive header rows</span>
+<span class="comment">% are ignored or handled appropriately, making sure that missing data (blanks or NaNs)</span>
+<span class="comment">% are handled correctly, making sure that numerical precision is handled correctly,</span>
+<span class="comment">% and making sure that any beginning or ending blank lines are not erroneously</span>
+<span class="comment">% treated as data entries.</span>
+
+<span class="comment">% Load in motion parameters for one NSD run. Note that in this case,</span>
+<span class="comment">% the text file consists of purely numeric data and has no header rows;</span>
+<span class="comment">% thus, we can simply use load.m to get the data.</span>
+file0 = <span class="string">'~/nsd/nsddata_timeseries/ppdata/subj01/func1pt8mm/motion/motion_session21_run10.tsv'</span>;
+a1 = load(file0);
+size(a1)  <span class="comment">% 226 volumes x 6 motion parameters</span>
+</pre><pre class="codeoutput">
+ans =
+
+   226     6
+
+</pre><pre class="codeinput">figure; plot(a1(:,1));
+</pre><img vspace="5" hspace="5" src="example02_loaddata_01.png" alt=""> <pre class="codeinput"><span class="comment">% Load in behavioral data for one subject. Here we use importdata.m,</span>
+<span class="comment">% which incorporates some assumptions and returns the data in a</span>
+<span class="comment">% somewhat structured format (which is nice). However, because of the</span>
+<span class="comment">% assumptions, it is always a good idea to check the validity of the results.</span>
+file0 = <span class="string">'~/nsd/nsddata/ppdata/subj01/behav/responses.tsv'</span>;
+a1 = importdata(file0);
+a1
+</pre><pre class="codeoutput">
+a1 = 
+
+  struct with fields:
+
+          data: [30000x19 double]
+      textdata: {1x19 cell}
+    colheaders: {1x19 cell}
+
+</pre><pre class="codeinput">a1.colheaders
+</pre><pre class="codeoutput">
+ans =
+
+  1x19 cell array
+
+  Columns 1 through 5
+
+    {'SUBJECT'}    {'SESSION'}    {'RUN'}    {'TRIAL'}    {'73KID'}
+
+  Columns 6 through 10
+
+    {'10KID'}    {'TIME'}    {'ISOLD'}    {'ISCORRECT'}    {'RT'}
+
+  Columns 11 through 14
+
+    {'CHANGEMIND'}    {'MEMORYRECENT'}    {'MEMORYFIRST'}    {'ISOLDCURRENT'}
+
+  Columns 15 through 18
+
+    {'ISCORRECTCURRENT'}    {'TOTAL1'}    {'TOTAL2'}    {'BUTTON'}
+
+  Column 19
+
+    {'MISSINGDATA'}
+
+</pre><pre class="codeinput"><span class="comment">% Let's use an alternative method to load in the behavioral data.</span>
+<span class="comment">% In this method, we will use low-level routines that provide greater</span>
+<span class="comment">% degree of control over the loading process.</span>
+fid = fopen(file0);
+a2 = textscan(fid,repmat(<span class="string">'%f'</span>,[1 19]),<span class="string">'Delimiter'</span>,<span class="string">'\t'</span>,<span class="string">'HeaderLines'</span>,1);
+fclose(fid);
+a2
+</pre><pre class="codeoutput">
+a2 =
+
+  1x19 cell array
+
+  Columns 1 through 3
+
+    {30000x1 double}    {30000x1 double}    {30000x1 double}
+
+  Columns 4 through 6
+
+    {30000x1 double}    {30000x1 double}    {30000x1 double}
+
+  Columns 7 through 9
+
+    {30000x1 double}    {30000x1 double}    {30000x1 double}
+
+  Columns 10 through 12
+
+    {30000x1 double}    {30000x1 double}    {30000x1 double}
+
+  Columns 13 through 15
+
+    {30000x1 double}    {30000x1 double}    {30000x1 double}
+
+  Columns 16 through 18
+
+    {30000x1 double}    {30000x1 double}    {30000x1 double}
+
+  Column 19
+
+    {30000x1 double}
+
+</pre><pre class="codeinput"><span class="comment">% Are the two loading schemes equivalent?</span>
+isequal(a1.data,cat(2,a2{:}))
+</pre><pre class="codeoutput">
+ans =
+
+  logical
+
+   0
+
+</pre><pre class="codeinput"><span class="comment">% Let's try that again. The trick is to realize that NaN does</span>
+<span class="comment">% not equal NaN according to == or isequal.m, but does according</span>
+<span class="comment">% to isequalwithequalnans.m. (Be careful!)</span>
+isequalwithequalnans(a1.data,cat(2,a2{:}))
+</pre><pre class="codeoutput">
+ans =
+
+  logical
+
+   1
+
+</pre><h2 id="12">Volume data as NIFTI files (.nii format)</h2><pre class="codeinput"><span class="comment">% NIFTI is a common neuroimaging format that is used to store 3D</span>
+<span class="comment">% (e.g. X x Y x Z) and 4D (e.g. X x Y x Z x T) volumes.</span>
+
+<span class="comment">% Here, we will use a function from the NIfTI_20140122 toolbox</span>
+<span class="comment">% in order to load in a volume of t-values (faces vs. non-faces).</span>
+a1 = load_untouch_nii(<span class="string">'~/nsd/nsddata/ppdata/subj01/func1pt8mm/floc_facestval.nii.gz'</span>);
+a1
+</pre><pre class="codeoutput">
+a1 = 
+
+  struct with fields:
+
+           hdr: [1x1 struct]
+      filetype: 2
+    fileprefix: '~/nsd/nsddata/ppdata/subj01/func1pt8mm/floc_facestval'
+       machine: 'ieee-le'
+           ext: []
+           img: [81x104x83 single]
+       untouch: 1
+
+</pre><pre class="codeinput"><span class="comment">% Some header fields that may be of interest include:</span>
+a1.hdr.dime.dim   <span class="comment">% the volume has matrix size 81 x 104 x 83</span>
+</pre><pre class="codeoutput">
+ans =
+
+     3    81   104    83     1     1     1     1
+
+</pre><pre class="codeinput">a1.hdr.dime.pixdim  <span class="comment">% the voxel size is 1.8-mm isotropic; the temporal resolution is 1.333 s</span>
+</pre><pre class="codeoutput">
+ans =
+
+  Columns 1 through 3
+
+                         0          1.79999995231628          1.79999995231628
+
+  Columns 4 through 6
+
+          1.79999995231628          1.33333337306976                         1
+
+  Columns 7 through 8
+
+                         1                         1
+
+</pre><pre class="codeinput"><span class="comment">% Importantly, the actual data is stored in a1.img.</span>
+<span class="comment">% Notice that the data have been saved in single format</span>
+<span class="comment">% (which occupies half the space compared to double format).</span>
+a1
+</pre><pre class="codeoutput">
+a1 = 
+
+  struct with fields:
+
+           hdr: [1x1 struct]
+      filetype: 2
+    fileprefix: '~/nsd/nsddata/ppdata/subj01/func1pt8mm/floc_facestval'
+       machine: 'ieee-le'
+           ext: []
+           img: [81x104x83 single]
+       untouch: 1
+
+</pre><pre class="codeinput"><span class="comment">% Let's visualize one slice of the data</span>
+figure; imagesc(a1.img(:,:,34),[0 10]); colormap(hot); colorbar; axis <span class="string">image</span>;
+</pre><img vspace="5" hspace="5" src="example02_loaddata_02.png" alt=""> <pre class="codeinput"><span class="comment">% As a matter of convention, all prepared NSD data are saved in LPI,</span>
+<span class="comment">% meaning that the first voxel is left, posterior, and inferior.</span>
+<span class="comment">% In the following animation, we can check that this is the case.</span>
+<span class="keyword">if</span> 0
+<span class="keyword">for</span> p=1:size(a1.img,3), p
+  imagesc(a1.img(:,:,p),[0 10]);
+  colormap(hot); colorbar;
+  axis <span class="string">image</span>;
+  pause;
+<span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="comment">% One more example. Here, we load a volume of ROI labels for visual cortex.</span>
+<span class="comment">% These are in the 0.8-mm anatomical space (matrix size is 320 x 320 x 320).</span>
+a1 = load_untouch_nii(<span class="string">'~/nsd/nsddata/ppdata/subj01/anat/roi/lh.Kastner2015.nii.gz'</span>);
+a1
+</pre><pre class="codeoutput">
+a1 = 
+
+  struct with fields:
+
+           hdr: [1x1 struct]
+      filetype: 2
+    fileprefix: '~/nsd/nsddata/ppdata/subj01/anat/roi/lh.Kastner2015'
+       machine: 'ieee-le'
+           ext: []
+           img: [320x320x320 double]
+       untouch: 1
+
+</pre><pre class="codeinput"><span class="comment">% Visualize and check that it makes sense.</span>
+figure; imagesc(a1.img(:,:,150),[0 25]); colormap(jet); axis <span class="string">image</span>;
+</pre><img vspace="5" hspace="5" src="example02_loaddata_03.png" alt=""> <pre class="codeinput"><span class="comment">% You may also want to load the exact same file in ITK-SNAP to compare.</span>
+</pre><h2 id="20">Surface data as MGZ files (.mgz format)</h2><pre class="codeinput"><span class="comment">% FreeSurfer uses .mgh/.mgz format for its internal file storage.</span>
+<span class="comment">% Although this format can store both volume and surface data, the prepared</span>
+<span class="comment">% NSD data make use of the .mgz format just to store surface data.</span>
+<span class="comment">%</span>
+<span class="comment">% Surface data do not have an easy ordering scheme, so surface data</span>
+<span class="comment">% can essentially be thought of as a vector of values that correspond</span>
+<span class="comment">% to the vertices that make up a surface. FreeSurfer generally keeps</span>
+<span class="comment">% left and right hemispheres separate; hence, for a complete set of</span>
+<span class="comment">% surface data, we typically use two .mgz files (e.g. lh.XXX.mgz</span>
+<span class="comment">% and rh.XXX.mgz).</span>
+
+<span class="comment">% Load in curvature values for the left hemisphere of one subject.</span>
+<span class="comment">% We use cvnloadmgz.m (which is just a wrapper around load_mgh.m,</span>
+<span class="comment">% a function provided by FreeSurfer).</span>
+a1 = cvnloadmgz(<span class="string">'~/nsd/nsddata/freesurfer/subj01/surf/lh.curvature.mgz'</span>);
+size(a1)  <span class="comment">% vertices x 1</span>
+</pre><pre class="codeoutput">
+
+
+ans =
+
+      227021           1
+
+</pre><pre class="codeinput">figure; hist(a1(:),100);  <span class="comment">% gyri are &lt; 0; sulci are &gt; 0</span>
+</pre><img vspace="5" hspace="5" src="example02_loaddata_04.png" alt=""> <pre class="codeinput"><span class="comment">% Load in the Kastner2015 ROI labeling for the left hemisphere</span>
+<span class="comment">% of the fsaverage surface. Notice that the number of vertices in the</span>
+<span class="comment">% fsaverage surface is special and canonical.</span>
+a1 = cvnloadmgz(<span class="string">'~/nsd/nsddata/freesurfer/fsaverage/label/lh.Kastner2015.mgz'</span>);
+size(a1)  <span class="comment">% vertices x 1</span>
+</pre><pre class="codeoutput">
+
+
+ans =
+
+      163842           1
+
+</pre><pre class="codeinput">union(a1(:),[])'  <span class="comment">% values are integers 0-25</span>
+</pre><pre class="codeoutput">
+ans =
+
+  Columns 1 through 13
+
+     0     1     2     3     4     5     6     7     8     9    10    11    12
+
+  Columns 14 through 26
+
+    13    14    15    16    17    18    19    20    21    22    23    24    25
+
+</pre><h2 id="25">Betas as HDF5 files (.hdf5 format)</h2><pre class="codeinput"><span class="comment">% In the prepared NSD data, the primary data of interest are the beta weights</span>
+<span class="comment">% (fMRI response amplitudes) obtained for each trial. These betas are provided</span>
+<span class="comment">% in both NIFTI format as well as HDF5 format. The primary advantage of</span>
+<span class="comment">% HDF5 format is that it supports random access, and therefore can greatly</span>
+<span class="comment">% speed up loading of the data.</span>
+
+<span class="comment">% Use h5read.m to load in betas from the 15th NSD scan session. There are 750</span>
+<span class="comment">% trials in each session, and so we will be loading in 750 betas.</span>
+<span class="comment">% We load in data for only 5 voxels: we start at voxel (10,10,10) and load</span>
+<span class="comment">% in voxels 10 through 14 along the 3rd dimension.</span>
+file0 = <span class="string">'~/nsd/nsddata_betas/ppdata/subj01/func1pt8mm/betas_fithrf/betas_session15.mat'</span>;
+data = h5read(file0,<span class="string">'/betas'</span>,[10 10 10 1],[1 1 5 750]);
+size(data)
+</pre><pre class="codeoutput">
+ans =
+
+     1     1     5   750
+
+</pre><pre class="codeinput">class(data)  <span class="comment">% note that the data are stored in int16 format</span>
+</pre><pre class="codeoutput">
+ans =
+
+    'int16'
+
+</pre><pre class="codeinput"><span class="comment">% Alternatively, we can use matfile.m as the loading mechanism. Compared to load.m,</span>
+<span class="comment">% the primary draw of matfile.m is that variables are not actually loaded</span>
+<span class="comment">% from disk until you specifically request them. In addition, matfile.m</span>
+<span class="comment">% supports random access (like h5read.m). In the code below, notice that we explicitly</span>
+<span class="comment">% cast the data to double format and then divide by 300 in order to convert</span>
+<span class="comment">% the betas to units of percent signal change.</span>
+data = [];  <span class="comment">% 10 x 10 x 10 x 750 trials x 40 sessions</span>
+<span class="keyword">for</span> p=1:40, p
+  file0 = sprintf(<span class="string">'~/nsd/nsddata_betas/ppdata/subj01/func1pt8mm/betas_fithrf/betas_session%02d.mat'</span>,p);
+  a1 = matfile(file0);
+  tic;
+  data(:,:,:,:,p) = double(a1.betas(41:50,3:12,35:44,:))/300;
+  toc;
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">
+p =
+
+     1
+
+Elapsed time is 3.799920 seconds.
+
+p =
+
+     2
+
+Elapsed time is 4.291926 seconds.
+
+p =
+
+     3
+
+Elapsed time is 4.239383 seconds.
+
+p =
+
+     4
+
+Elapsed time is 4.219766 seconds.
+
+p =
+
+     5
+
+Elapsed time is 3.287139 seconds.
+
+p =
+
+     6
+
+Elapsed time is 3.857205 seconds.
+
+p =
+
+     7
+
+Elapsed time is 3.509203 seconds.
+
+p =
+
+     8
+
+Elapsed time is 3.601303 seconds.
+
+p =
+
+     9
+
+Elapsed time is 3.039621 seconds.
+
+p =
+
+    10
+
+Elapsed time is 3.311054 seconds.
+
+p =
+
+    11
+
+Elapsed time is 3.182775 seconds.
+
+p =
+
+    12
+
+Elapsed time is 3.320419 seconds.
+
+p =
+
+    13
+
+Elapsed time is 3.267112 seconds.
+
+p =
+
+    14
+
+Elapsed time is 3.344784 seconds.
+
+p =
+
+    15
+
+Elapsed time is 3.530162 seconds.
+
+p =
+
+    16
+
+Elapsed time is 3.413560 seconds.
+
+p =
+
+    17
+
+Elapsed time is 3.539059 seconds.
+
+p =
+
+    18
+
+Elapsed time is 3.395545 seconds.
+
+p =
+
+    19
+
+Elapsed time is 3.207566 seconds.
+
+p =
+
+    20
+
+Elapsed time is 3.267954 seconds.
+
+p =
+
+    21
+
+Elapsed time is 3.341347 seconds.
+
+p =
+
+    22
+
+Elapsed time is 3.131565 seconds.
+
+p =
+
+    23
+
+Elapsed time is 3.597477 seconds.
+
+p =
+
+    24
+
+Elapsed time is 3.378706 seconds.
+
+p =
+
+    25
+
+Elapsed time is 3.798114 seconds.
+
+p =
+
+    26
+
+Elapsed time is 4.229713 seconds.
+
+p =
+
+    27
+
+Elapsed time is 4.202617 seconds.
+
+p =
+
+    28
+
+Elapsed time is 4.147491 seconds.
+
+p =
+
+    29
+
+Elapsed time is 3.833010 seconds.
+
+p =
+
+    30
+
+Elapsed time is 3.975075 seconds.
+
+p =
+
+    31
+
+Elapsed time is 4.024678 seconds.
+
+p =
+
+    32
+
+Elapsed time is 3.804911 seconds.
+
+p =
+
+    33
+
+Elapsed time is 3.790908 seconds.
+
+p =
+
+    34
+
+Elapsed time is 3.790941 seconds.
+
+p =
+
+    35
+
+Elapsed time is 4.315197 seconds.
+
+p =
+
+    36
+
+Elapsed time is 4.532585 seconds.
+
+p =
+
+    37
+
+Elapsed time is 4.031229 seconds.
+
+p =
+
+    38
+
+Elapsed time is 4.074241 seconds.
+
+p =
+
+    39
+
+Elapsed time is 4.430541 seconds.
+
+p =
+
+    40
+
+Elapsed time is 4.318130 seconds.
+</pre><pre class="codeinput">size(data)
+</pre><pre class="codeoutput">
+ans =
+
+    10    10    10   750    40
+
+</pre><pre class="codeinput"><span class="comment">% Let's average the betas across trials and sessions, and then look at the result.</span>
+temp = mean(mean(data,4),5);
+figure; imagesc(makeimagestack(temp),[-10 10]); axis <span class="string">image</span>; colormap(cmapsign4); colorbar;
+</pre><img vspace="5" hspace="5" src="example02_loaddata_05.png" alt=""> <pre class="codeinput"><span class="comment">% We might want to look at the results using ITK-SNAP, which might be more intuitive/easy.</span>
+<span class="comment">% To do that, we need to write the result to a NIFTI file.</span>
+nsd_savenifti(temp,[1.8 1.8 1.8],<span class="string">'test.nii.gz'</span>);
+
+<span class="comment">% Load the test.nii.gz file into ITK-SNAP and see if you can convince yourself</span>
+<span class="comment">% that the two visualizations are consistent. Note that the function makeimagestack.m</span>
+<span class="comment">% extracts slices from the third dimension and places successive images downwards</span>
+<span class="comment">% and then rightwards. In addition, remember that the NSD volumes are saved in LPI</span>
+<span class="comment">% order. Thus, the orientation of the slices from makeimagestack.m do not match</span>
+<span class="comment">% the orientation of the first panel in ITK-SNAP (which is in "AR" ordering).</span>
+<span class="comment">% To make the figure from makeimagestack.m match ITK-SNAP, one can do the following:</span>
+fun = @(x) flipdim(flipdim(permute(x,[2 1 3]),1),2);
+figure; imagesc(makeimagestack(fun(temp)),[-10 10]); axis <span class="string">image</span>; colormap(cmapsign4); colorbar;
+</pre><img vspace="5" hspace="5" src="example02_loaddata_06.png" alt=""> <h2 id="32">Images as PNG files (.png format)</h2><pre class="codeinput"><span class="comment">% The .png file format is a lossless image format that is commonly</span>
+<span class="comment">% used for everyday computer tasks. It is convenient because your OS</span>
+<span class="comment">% can probably just open it and view it. However, the .png format does</span>
+<span class="comment">% not store multiple images, and having to keep track of large numbers</span>
+<span class="comment">% of files can cause severe slowdowns.</span>
+
+<span class="comment">% Load in one specific image</span>
+file0 = <span class="string">'~/nsd/nsddata/stimuli/nsd/shared1000/shared0001_nsd02951.png'</span>;
+im = imread(file0);  <span class="comment">% 425 pixels x 425 pixels x 3 (uint8 format)</span>
+size(im)
+</pre><pre class="codeoutput">
+ans =
+
+   425   425     3
+
+</pre><pre class="codeinput">figure; imshow(im);
+</pre><img vspace="5" hspace="5" src="example02_loaddata_07.png" alt=""> <pre class="codeinput">class(im)
+</pre><pre class="codeoutput">
+ans =
+
+    'uint8'
+
+</pre><pre class="codeinput"><span class="comment">% Load in many images</span>
+stimfiles = matchfiles(<span class="string">'~/nsd/nsddata/stimuli/nsd/shared1000/*.png'</span>);
+im = zeros(425,425,3,1000,<span class="string">'uint8'</span>);
+<span class="keyword">for</span> p=1:length(stimfiles)
+  statusdots(p,length(stimfiles));
+  im(:,:,:,p) = imread(stimfiles{p});
+<span class="keyword">end</span>
+size(im)
+</pre><pre class="codeoutput">....................
+ans =
+
+         425         425           3        1000
+
+</pre><h2 id="37">Images in HDF5 format (.hdf5 format)</h2><pre class="codeinput"><span class="comment">% The NSD experiment involves a large number of images (73,000). We elected</span>
+<span class="comment">% to store these images in uint8 format in a single, very large .hdf5 file</span>
+<span class="comment">% in order to facilitate access.</span>
+
+<span class="comment">% Load in the 2951st NSD image</span>
+stimfile = <span class="string">'~/nsd/nsddata_stimuli/stimuli/nsd/nsd_stimuli.hdf5'</span>;
+im = h5read(stimfile,<span class="string">'/imgBrick'</span>,[1 1 1 2951],[3 425 425 1]);
+im = permute(im,[3 2 1]);  <span class="comment">% 425 pixels x 425 pixels x 3 (uint8 format)</span>
+figure; imshow(im);
+</pre><img vspace="5" hspace="5" src="example02_loaddata_08.png" alt=""> <pre class="codeinput">class(im)
+</pre><pre class="codeoutput">
+ans =
+
+    'uint8'
+
+</pre><h2 id="40">Cortical surfaces in native FreeSurfer format (lh.white, lh.pial, etc.)</h2><pre class="codeinput"><span class="comment">% Use freesurfer_read_surf_kj.m (which is just a wrapper around</span>
+<span class="comment">% the freesurfer_read_surf.m function provided by FreeSurfer) to</span>
+<span class="comment">% read in the left hemisphere white-matter surface of one subject.</span>
+[vertices,faces] = freesurfer_read_surf_kj(<span class="string">'~/nsd/nsddata/freesurfer/subj01/surf/lh.white'</span>);
+size(vertices)  <span class="comment">% vertices x 3 coordinates</span>
+</pre><pre class="codeoutput">
+ans =
+
+      227021           3
+
+</pre><pre class="codeinput">size(faces)     <span class="comment">% faces x 3 vertex indices</span>
+</pre><pre class="codeoutput">
+ans =
+
+      454038           3
+
+</pre><pre class="codeinput"><span class="comment">% Let's also load in the inflated version of this surface.</span>
+[vertices2,faces2] = freesurfer_read_surf_kj(<span class="string">'~/nsd/nsddata/freesurfer/subj01/surf/lh.inflated'</span>);
+
+<span class="comment">% Notice that the white and inflated surfaces have exactly the same number of vertices</span>
+isequal(size(vertices),size(vertices2))
+</pre><pre class="codeoutput">
+ans =
+
+  logical
+
+   1
+
+</pre><pre class="codeinput"><span class="comment">% Also, the white and inflated surfaces have the exact same faces</span>
+isequal(faces,faces2)
+</pre><pre class="codeoutput">
+ans =
+
+  logical
+
+   1
+
+</pre><pre class="codeinput"><span class="comment">% We can also use cvncode's cvnreadsurface.m to do the loading (which</span>
+<span class="comment">% is yet another wrapper). Note that the function relies on having the</span>
+<span class="comment">% FreeSurfer environment variable SUBJECTS_DIR correctly set.</span>
+<span class="comment">% (That is how it knows where to find the surface files.)</span>
+getenv(<span class="string">'SUBJECTS_DIR'</span>)
+</pre><pre class="codeoutput">
+ans =
+
+    '/home/surly-raid4/kendrick-data/nsd/nsddata/freesurfer'
+
+</pre><pre class="codeinput">surfL = cvnreadsurface(<span class="string">'subj01'</span>,<span class="string">'lh'</span>,<span class="string">'inflated'</span>,[]);
+surfL
+</pre><pre class="codeoutput">
+surfL = 
+
+  struct with fields:
+
+    vertices: [227021x3 double]
+       faces: [454038x3 double]
+
+</pre><h2 id="47">Surface-based ROI files (various formats such as .mgz, .annot, .label)</h2><pre class="codeinput"><span class="comment">% FreeSurfer outputs a variety of different ROI files; in addition,</span>
+<span class="comment">% the prepared NSD data includes a number of ROIs. To facilitate access</span>
+<span class="comment">% to these ROIs, we can use the function cvnroimask.m.</span>
+
+<span class="comment">% Load in the Kastner 2015 atlas that has been prepared and mapped onto</span>
+<span class="comment">% subj01's cortical surface. Here we load in ROI labelings for the left hemisphere.</span>
+[roimask,roidescription] = cvnroimask(<span class="string">'subj01'</span>,<span class="string">'lh'</span>,<span class="string">'Kastner2015'</span>);
+
+<span class="comment">% There are 25 ROIs in the atlas; each element of roimask is a binary vector.</span>
+roimask
+</pre><pre class="codeoutput">
+
+
+roimask =
+
+  1x25 cell array
+
+  Columns 1 through 3
+
+    {227021x1 logical}    {227021x1 logical}    {227021x1 logical}
+
+  Columns 4 through 6
+
+    {227021x1 logical}    {227021x1 logical}    {227021x1 logical}
+
+  Columns 7 through 9
+
+    {227021x1 logical}    {227021x1 logical}    {227021x1 logical}
+
+  Columns 10 through 12
+
+    {227021x1 logical}    {227021x1 logical}    {227021x1 logical}
+
+  Columns 13 through 15
+
+    {227021x1 logical}    {227021x1 logical}    {227021x1 logical}
+
+  Columns 16 through 18
+
+    {227021x1 logical}    {227021x1 logical}    {227021x1 logical}
+
+  Columns 19 through 21
+
+    {227021x1 logical}    {227021x1 logical}    {227021x1 logical}
+
+  Columns 22 through 24
+
+    {227021x1 logical}    {227021x1 logical}    {227021x1 logical}
+
+  Column 25
+
+    {227021x1 logical}
+
+</pre><pre class="codeinput"><span class="comment">% A set of names are available too.</span>
+roidescription
+</pre><pre class="codeoutput">
+roidescription =
+
+  1x25 cell array
+
+  Columns 1 through 3
+
+    {'V1v@Kastner2015'}    {'V1d@Kastner2015'}    {'V2v@Kastner2015'}
+
+  Columns 4 through 6
+
+    {'V2d@Kastner2015'}    {'V3v@Kastner2015'}    {'V3d@Kastner2015'}
+
+  Columns 7 through 9
+
+    {'hV4@Kastner2015'}    {'VO1@Kastner2015'}    {'VO2@Kastner2015'}
+
+  Columns 10 through 12
+
+    {'PHC1@Kastner2015'}    {'PHC2@Kastner2015'}    {'TO2@Kastner2015'}
+
+  Columns 13 through 15
+
+    {'TO1@Kastner2015'}    {'LO2@Kastner2015'}    {'LO1@Kastner2015'}
+
+  Columns 16 through 18
+
+    {'V3B@Kastner2015'}    {'V3A@Kastner2015'}    {'IPS0@Kastner2015'}
+
+  Columns 19 through 21
+
+    {'IPS1@Kastner2015'}    {'IPS2@Kastner2015'}    {'IPS3@Kastner2015'}
+
+  Columns 22 through 24
+
+    {'IPS4@Kastner2015'}    {'IPS5@Kastner2015'}    {'SPL1@Kastner2015'}
+
+  Column 25
+
+    {'FEF@Kastner2015'}
+
+</pre><pre class="codeinput"><span class="comment">% The names can also be read using this alternative method:</span>
+file0 = <span class="string">'~/nsd/nsddata/freesurfer/subj01/label/Kastner2015.mgz.ctab'</span>;
+roidescription2 = read_ctab(file0);
+roidescription2
+</pre><pre class="codeoutput">
+roidescription2 = 
+
+  struct with fields:
+
+      numEntries: 26
+        orig_tab: '~/nsd/nsddata/freesurfer/subj01/label/Kastner2015.mgz.ctab'
+    struct_names: {26x1 cell}
+           table: [26x5 int32]
+     structureID: [26x1 int32]
+
+</pre><pre class="codeinput"><span class="comment">% Or directly as a text file:</span>
+txt = loadtext(file0);
+txt
+</pre><pre class="codeoutput">
+txt =
+
+  1x26 cell array
+
+  Columns 1 through 4
+
+    {'0 Unknown'}    {'1 V1v	    '}    {'2 V1d	   '}    {'3 V2v	   '}
+
+  Columns 5 through 8
+
+    {'4 V2d	   '}    {'5 V3v	    '}    {'6 V3d	    '}    {'7 hV4	  '}
+
+  Columns 9 through 11
+
+    {'8 VO1	    '}    {'9 VO2	    '}    {'10 PHC1	    '}
+
+  Columns 12 through 15
+
+    {'11 PHC2	    '}    {'12 TO2	    '}    {'13 TO1	   '}    {'14 LO2	    '}
+
+  Columns 16 through 19
+
+    {'15 LO1	   '}    {'16 V3B	    '}    {'17 V3A	  '}    {'18 IPS0	   '}
+
+  Columns 20 through 23
+
+    {'19 IPS1	    '}    {'20 IPS2	    '}    {'21 IPS3	  '}    {'22 IPS4	  '}
+
+  Columns 24 through 26
+
+    {'23 IPS5	  '}    {'24 SPL1	 '}    {'25 FEF	'}
+
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Example 2: Loading data into MATLAB
+
+%% Introduction
+
+% In this script, we are going to go through examples of how
+% to load various types of data files into MATLAB. Loading data
+% is the first step before we can do data analysis.
+%
+% Skills/concepts:
+% - File formats
+% - Thinking about data formats (e.g. double, single, int16)
+% - Issues specific to NIFTI files
+% - Issues specific to surfaces
+% - HDF5-related concepts
+
+
+
+%% Miscellaneous data (.mat format)
+
+% MATLAB's .mat format is a catch-all format that can hold
+% all sorts of different kinds of data.
+ 
+% Load information pertaining to the experimental
+% design of the NSD experiment. By assigning the output
+% of load.m to a variable, we encapsulate the loaded variables
+% into a struct (thus, leaving the workspace uncluttered).
+a1 = load('~/nsd/nsddata/experiments/nsd/nsd_expdesign.mat');
+a1
+%%
+
+
+
+%% Text data (.tsv format)
+
+% Although inefficient in terms of disk space, it is sometimes
+% convenient to store data in text format. The main advantage is that text
+% is easy to open (e.g. using a text editor or a spreadsheet program).
+%
+% A common format is .tsv (tab-separated values), which is similar
+% to .csv (comma-separated values).
+%
+% Typical things to watch out for include: making sure that any descriptive header rows 
+% are ignored or handled appropriately, making sure that missing data (blanks or NaNs) 
+% are handled correctly, making sure that numerical precision is handled correctly,
+% and making sure that any beginning or ending blank lines are not erroneously 
+% treated as data entries.
+
+% Load in motion parameters for one NSD run. Note that in this case, 
+% the text file consists of purely numeric data and has no header rows;
+% thus, we can simply use load.m to get the data.
+file0 = '~/nsd/nsddata_timeseries/ppdata/subj01/func1pt8mm/motion/motion_session21_run10.tsv';
+a1 = load(file0);
+size(a1)  % 226 volumes x 6 motion parameters
+%%
+figure; plot(a1(:,1));
+%%
+
+% Load in behavioral data for one subject. Here we use importdata.m, 
+% which incorporates some assumptions and returns the data in a 
+% somewhat structured format (which is nice). However, because of the 
+% assumptions, it is always a good idea to check the validity of the results.
+file0 = '~/nsd/nsddata/ppdata/subj01/behav/responses.tsv';
+a1 = importdata(file0);
+a1
+%%
+a1.colheaders
+%%
+
+% Let's use an alternative method to load in the behavioral data.
+% In this method, we will use low-level routines that provide greater
+% degree of control over the loading process.
+fid = fopen(file0);
+a2 = textscan(fid,repmat('%f',[1 19]),'Delimiter','\t','HeaderLines',1);
+fclose(fid);
+a2
+%%
+
+% Are the two loading schemes equivalent?
+isequal(a1.data,cat(2,a2{:}))
+%%
+
+% Let's try that again. The trick is to realize that NaN does 
+% not equal NaN according to == or isequal.m, but does according
+% to isequalwithequalnans.m. (Be careful!)
+isequalwithequalnans(a1.data,cat(2,a2{:}))
+%%
+
+
+
+%% Volume data as NIFTI files (.nii format)
+
+% NIFTI is a common neuroimaging format that is used to store 3D 
+% (e.g. X x Y x Z) and 4D (e.g. X x Y x Z x T) volumes.
+
+% Here, we will use a function from the NIfTI_20140122 toolbox
+% in order to load in a volume of t-values (faces vs. non-faces).
+a1 = load_untouch_nii('~/nsd/nsddata/ppdata/subj01/func1pt8mm/floc_facestval.nii.gz');
+a1
+%%
+
+% Some header fields that may be of interest include:
+a1.hdr.dime.dim   % the volume has matrix size 81 x 104 x 83 
+%%
+a1.hdr.dime.pixdim  % the voxel size is 1.8-mm isotropic; the temporal resolution is 1.333 s
+%%
+
+% Importantly, the actual data is stored in a1.img.
+% Notice that the data have been saved in single format
+% (which occupies half the space compared to double format).
+a1
+%%
+
+% Let's visualize one slice of the data
+figure; imagesc(a1.img(:,:,34),[0 10]); colormap(hot); colorbar; axis image;
+%%
+
+% As a matter of convention, all prepared NSD data are saved in LPI,
+% meaning that the first voxel is left, posterior, and inferior.
+% In the following animation, we can check that this is the case.
+if 0
+for p=1:size(a1.img,3), p
+  imagesc(a1.img(:,:,p),[0 10]);
+  colormap(hot); colorbar;
+  axis image;
+  pause;
+end
+end
+
+% One more example. Here, we load a volume of ROI labels for visual cortex.
+% These are in the 0.8-mm anatomical space (matrix size is 320 x 320 x 320).
+a1 = load_untouch_nii('~/nsd/nsddata/ppdata/subj01/anat/roi/lh.Kastner2015.nii.gz');
+a1
+%%
+
+% Visualize and check that it makes sense.
+figure; imagesc(a1.img(:,:,150),[0 25]); colormap(jet); axis image;
+%%
+
+% You may also want to load the exact same file in ITK-SNAP to compare.
+
+
+
+%% Surface data as MGZ files (.mgz format)
+
+% FreeSurfer uses .mgh/.mgz format for its internal file storage.
+% Although this format can store both volume and surface data, the prepared
+% NSD data make use of the .mgz format just to store surface data. 
+%
+% Surface data do not have an easy ordering scheme, so surface data
+% can essentially be thought of as a vector of values that correspond
+% to the vertices that make up a surface. FreeSurfer generally keeps
+% left and right hemispheres separate; hence, for a complete set of
+% surface data, we typically use two .mgz files (e.g. lh.XXX.mgz
+% and rh.XXX.mgz).
+
+% Load in curvature values for the left hemisphere of one subject.
+% We use cvnloadmgz.m (which is just a wrapper around load_mgh.m,
+% a function provided by FreeSurfer).
+a1 = cvnloadmgz('~/nsd/nsddata/freesurfer/subj01/surf/lh.curvature.mgz');
+size(a1)  % vertices x 1
+%%
+figure; hist(a1(:),100);  % gyri are < 0; sulci are > 0
+%%
+
+% Load in the Kastner2015 ROI labeling for the left hemisphere
+% of the fsaverage surface. Notice that the number of vertices in the
+% fsaverage surface is special and canonical.
+a1 = cvnloadmgz('~/nsd/nsddata/freesurfer/fsaverage/label/lh.Kastner2015.mgz');
+size(a1)  % vertices x 1
+%%
+union(a1(:),[])'  % values are integers 0-25
+%%
+
+
+
+%% Betas as HDF5 files (.hdf5 format)
+
+% In the prepared NSD data, the primary data of interest are the beta weights
+% (fMRI response amplitudes) obtained for each trial. These betas are provided
+% in both NIFTI format as well as HDF5 format. The primary advantage of
+% HDF5 format is that it supports random access, and therefore can greatly 
+% speed up loading of the data.
+
+% Use h5read.m to load in betas from the 15th NSD scan session. There are 750
+% trials in each session, and so we will be loading in 750 betas.
+% We load in data for only 5 voxels: we start at voxel (10,10,10) and load 
+% in voxels 10 through 14 along the 3rd dimension.
+file0 = '~/nsd/nsddata_betas/ppdata/subj01/func1pt8mm/betas_fithrf/betas_session15.mat';
+data = h5read(file0,'/betas',[10 10 10 1],[1 1 5 750]);
+size(data)
+%%
+class(data)  % note that the data are stored in int16 format
+%%
+
+% Alternatively, we can use matfile.m as the loading mechanism. Compared to load.m,
+% the primary draw of matfile.m is that variables are not actually loaded
+% from disk until you specifically request them. In addition, matfile.m 
+% supports random access (like h5read.m). In the code below, notice that we explicitly
+% cast the data to double format and then divide by 300 in order to convert
+% the betas to units of percent signal change.
+data = [];  % 10 x 10 x 10 x 750 trials x 40 sessions
+for p=1:40, p
+  file0 = sprintf('~/nsd/nsddata_betas/ppdata/subj01/func1pt8mm/betas_fithrf/betas_session%02d.mat',p);
+  a1 = matfile(file0);
+  tic;
+  data(:,:,:,:,p) = double(a1.betas(41:50,3:12,35:44,:))/300;
+  toc;
+end
+%%
+size(data)
+%%
+
+% Let's average the betas across trials and sessions, and then look at the result.
+temp = mean(mean(data,4),5);
+figure; imagesc(makeimagestack(temp),[-10 10]); axis image; colormap(cmapsign4); colorbar;
+%%
+
+% We might want to look at the results using ITK-SNAP, which might be more intuitive/easy.
+% To do that, we need to write the result to a NIFTI file.
+nsd_savenifti(temp,[1.8 1.8 1.8],'test.nii.gz');
+
+% Load the test.nii.gz file into ITK-SNAP and see if you can convince yourself 
+% that the two visualizations are consistent. Note that the function makeimagestack.m 
+% extracts slices from the third dimension and places successive images downwards 
+% and then rightwards. In addition, remember that the NSD volumes are saved in LPI 
+% order. Thus, the orientation of the slices from makeimagestack.m do not match
+% the orientation of the first panel in ITK-SNAP (which is in "AR" ordering).
+% To make the figure from makeimagestack.m match ITK-SNAP, one can do the following:
+fun = @(x) flipdim(flipdim(permute(x,[2 1 3]),1),2);
+figure; imagesc(makeimagestack(fun(temp)),[-10 10]); axis image; colormap(cmapsign4); colorbar;
+%%
+
+
+
+%% Images as PNG files (.png format)
+
+% The .png file format is a lossless image format that is commonly
+% used for everyday computer tasks. It is convenient because your OS
+% can probably just open it and view it. However, the .png format does 
+% not store multiple images, and having to keep track of large numbers
+% of files can cause severe slowdowns.
+
+% Load in one specific image
+file0 = '~/nsd/nsddata/stimuli/nsd/shared1000/shared0001_nsd02951.png';
+im = imread(file0);  % 425 pixels x 425 pixels x 3 (uint8 format)
+size(im)
+%%
+figure; imshow(im);
+%%
+class(im)
+%%
+
+% Load in many images
+stimfiles = matchfiles('~/nsd/nsddata/stimuli/nsd/shared1000/*.png');
+im = zeros(425,425,3,1000,'uint8');
+for p=1:length(stimfiles)
+  statusdots(p,length(stimfiles));
+  im(:,:,:,p) = imread(stimfiles{p});
+end
+size(im)
+%%
+
+
+
+%% Images in HDF5 format (.hdf5 format)
+
+% The NSD experiment involves a large number of images (73,000). We elected
+% to store these images in uint8 format in a single, very large .hdf5 file
+% in order to facilitate access.
+
+% Load in the 2951st NSD image
+stimfile = '~/nsd/nsddata_stimuli/stimuli/nsd/nsd_stimuli.hdf5';
+im = h5read(stimfile,'/imgBrick',[1 1 1 2951],[3 425 425 1]);
+im = permute(im,[3 2 1]);  % 425 pixels x 425 pixels x 3 (uint8 format)
+figure; imshow(im);
+%%
+class(im)
+%%
+
+
+
+%% Cortical surfaces in native FreeSurfer format (lh.white, lh.pial, etc.)
+
+% Use freesurfer_read_surf_kj.m (which is just a wrapper around
+% the freesurfer_read_surf.m function provided by FreeSurfer) to
+% read in the left hemisphere white-matter surface of one subject.
+[vertices,faces] = freesurfer_read_surf_kj('~/nsd/nsddata/freesurfer/subj01/surf/lh.white');
+size(vertices)  % vertices x 3 coordinates
+%%
+size(faces)     % faces x 3 vertex indices
+%%
+
+% Let's also load in the inflated version of this surface.
+[vertices2,faces2] = freesurfer_read_surf_kj('~/nsd/nsddata/freesurfer/subj01/surf/lh.inflated');
+
+% Notice that the white and inflated surfaces have exactly the same number of vertices
+isequal(size(vertices),size(vertices2))
+%%
+
+% Also, the white and inflated surfaces have the exact same faces
+isequal(faces,faces2)
+%%
+
+% We can also use cvncode's cvnreadsurface.m to do the loading (which
+% is yet another wrapper). Note that the function relies on having the 
+% FreeSurfer environment variable SUBJECTS_DIR correctly set. 
+% (That is how it knows where to find the surface files.)
+getenv('SUBJECTS_DIR')
+%%
+surfL = cvnreadsurface('subj01','lh','inflated',[]);
+surfL
+%%
+
+
+
+%% Surface-based ROI files (various formats such as .mgz, .annot, .label)
+
+% FreeSurfer outputs a variety of different ROI files; in addition,
+% the prepared NSD data includes a number of ROIs. To facilitate access
+% to these ROIs, we can use the function cvnroimask.m.
+
+% Load in the Kastner 2015 atlas that has been prepared and mapped onto
+% subj01's cortical surface. Here we load in ROI labelings for the left hemisphere.
+[roimask,roidescription] = cvnroimask('subj01','lh','Kastner2015');
+
+% There are 25 ROIs in the atlas; each element of roimask is a binary vector.
+roimask
+%%
+
+% A set of names are available too.
+roidescription
+%%
+
+% The names can also be read using this alternative method:
+file0 = '~/nsd/nsddata/freesurfer/subj01/label/Kastner2015.mgz.ctab';
+roidescription2 = read_ctab(file0);
+roidescription2
+%%
+
+% Or directly as a text file:
+txt = loadtext(file0);
+txt
+%%
+
+
+
+##### SOURCE END #####
+--></body></html>

@@ -1,0 +1,228 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Example 11: Representational similarity analysis</title><meta name="generator" content="MATLAB 9.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-12-25"><meta name="DC.source" content="example11_rsa.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Example 11: Representational similarity analysis</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Introduction</a></li><li><a href="#2">Load data</a></li><li><a href="#4">Construct RDMs (representational dissimilarity matrices)</a></li><li><a href="#5">Visualize results</a></li></ul></div><h2 id="1">Introduction</h2><pre class="codeinput"><span class="comment">% In this script, we provide a simple example of performing</span>
+<span class="comment">% representational similarity analysis. We actually do this</span>
+<span class="comment">% not on the core NSD data but on the category-localizer floc</span>
+<span class="comment">% experiment that was also conducted in the NSD subjects.</span>
+<span class="comment">%</span>
+<span class="comment">% Skills/concepts:</span>
+<span class="comment">% - Creating representational dissimilarity matrices</span>
+</pre><h2 id="2">Load data</h2><pre class="codeinput"><span class="comment">% load the names of the categories used in the floc experiment</span>
+catlabels = importdata(<span class="string">'~/nsd/nsddata/experiments/floc/categories.tsv'</span>);
+
+<span class="comment">% load in floc betas from a ventral temporal cortex ROI</span>
+betas = {};
+<span class="keyword">for</span> subjix=1:8
+
+  <span class="comment">% load in the visualsulc atlas</span>
+  roi1 = load_untouch_nii(sprintf(<span class="string">'~/nsd/nsddata/ppdata/subj%02d/func1pt8mm/roi/visualsulc.nii.gz'</span>,subjix));
+
+  <span class="comment">% load in the floc betas (the 60 betas are ordered as 6 condition-splits * 10 categories)</span>
+  a1 = load_untouch_nii(sprintf(<span class="string">'~/nsd/nsddata/ppdata/subj%02d/func1pt8mm/floc_betas.nii.gz'</span>,subjix));
+
+  <span class="comment">% extract data for voxels within the union of OTS, FG, mFus, CoS</span>
+  betas{subjix} = subscript(squish(a1.img,3),{find(ismember(roi1.img,[1 3 4 6])) <span class="string">':'</span>});  <span class="comment">% voxels x betas</span>
+
+<span class="keyword">end</span>
+betas
+</pre><pre class="codeoutput">
+betas =
+
+  1x8 cell array
+
+  Columns 1 through 3
+
+    {3863x60 single}    {4432x60 single}    {4253x60 single}
+
+  Columns 4 through 6
+
+    {3868x60 single}    {3325x60 single}    {5061x60 single}
+
+  Columns 7 through 8
+
+    {3289x60 single}    {4275x60 single}
+
+</pre><h2 id="4">Construct RDMs (representational dissimilarity matrices)</h2><pre class="codeinput"><span class="comment">% do it</span>
+cmatrix = [];  <span class="comment">% 10 x 10 x subjects, values are in [0,2]</span>
+<span class="keyword">for</span> subjix=1:8
+
+  <span class="comment">% average across condition-splits</span>
+  temp = squish(mean(reshape(betas{subjix},[],6,10),2),2);  <span class="comment">% voxels x 10 categories</span>
+
+  <span class="comment">% calculate pairwise correlations of activity patterns and subtract from 1</span>
+  cmatrix(:,:,subjix) = 1-calcconfusionmatrix(temp,[],2);
+
+<span class="keyword">end</span>
+</pre><h2 id="5">Visualize results</h2><pre class="codeinput"><span class="comment">% plot</span>
+figureprep([100 100 1000 500],1);
+<span class="keyword">for</span> subjix=1:8
+  subplot(2,4,subjix); hold <span class="string">on</span>;
+  imagesc(cmatrix(:,:,subjix),[0 0.5]);
+  colormap(copper); colorbar;
+  axis <span class="string">image</span> <span class="string">tight</span>;
+  set(gca,<span class="string">'YDir'</span>,<span class="string">'reverse'</span>);
+  set(gca,<span class="string">'YTick'</span>,1:10,<span class="string">'YTickLabel'</span>,catlabels);
+  set(gca,<span class="string">'XTick'</span>,1:10,<span class="string">'XTickLabel'</span>,catlabels);
+  xticklabel_rotate;
+  title(sprintf(<span class="string">'Subject %d'</span>,subjix));
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="example11_rsa_01.png" alt=""> <pre class="codeinput"><span class="comment">% Note that results will vary depending on the units of the data and the</span>
+<span class="comment">% choice of similarity metric. In the above example, we used the</span>
+<span class="comment">% beta weights as given in units of percent BOLD signal change and</span>
+<span class="comment">% used one minus Pearson's correlation as the measure of dissimilarity.</span>
+<span class="comment">% One might consider other similarity metrics and/or normalization of the</span>
+<span class="comment">% data prior to RDM construction (e.g. mean-subtraction or z-scoring</span>
+<span class="comment">% of voxel responses or activity patterns). Caution should be exercised</span>
+<span class="comment">% to ensure proper intepretation of results.</span>
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Example 11: Representational similarity analysis
+
+%% Introduction
+
+% In this script, we provide a simple example of performing
+% representational similarity analysis. We actually do this 
+% not on the core NSD data but on the category-localizer floc
+% experiment that was also conducted in the NSD subjects.
+%
+% Skills/concepts:
+% - Creating representational dissimilarity matrices
+
+
+
+%% Load data
+
+% load the names of the categories used in the floc experiment
+catlabels = importdata('~/nsd/nsddata/experiments/floc/categories.tsv');
+
+% load in floc betas from a ventral temporal cortex ROI
+betas = {};
+for subjix=1:8
+  
+  % load in the visualsulc atlas
+  roi1 = load_untouch_nii(sprintf('~/nsd/nsddata/ppdata/subj%02d/func1pt8mm/roi/visualsulc.nii.gz',subjix));
+  
+  % load in the floc betas (the 60 betas are ordered as 6 condition-splits * 10 categories)
+  a1 = load_untouch_nii(sprintf('~/nsd/nsddata/ppdata/subj%02d/func1pt8mm/floc_betas.nii.gz',subjix));
+  
+  % extract data for voxels within the union of OTS, FG, mFus, CoS
+  betas{subjix} = subscript(squish(a1.img,3),{find(ismember(roi1.img,[1 3 4 6])) ':'});  % voxels x betas
+
+end
+betas
+%%
+
+
+
+%% Construct RDMs (representational dissimilarity matrices)
+
+% do it
+cmatrix = [];  % 10 x 10 x subjects, values are in [0,2]
+for subjix=1:8
+
+  % average across condition-splits
+  temp = squish(mean(reshape(betas{subjix},[],6,10),2),2);  % voxels x 10 categories
+
+  % calculate pairwise correlations of activity patterns and subtract from 1
+  cmatrix(:,:,subjix) = 1-calcconfusionmatrix(temp,[],2);
+
+end
+
+
+
+%% Visualize results
+
+% plot
+figureprep([100 100 1000 500],1);
+for subjix=1:8
+  subplot(2,4,subjix); hold on;
+  imagesc(cmatrix(:,:,subjix),[0 0.5]);
+  colormap(copper); colorbar;
+  axis image tight;
+  set(gca,'YDir','reverse');
+  set(gca,'YTick',1:10,'YTickLabel',catlabels);
+  set(gca,'XTick',1:10,'XTickLabel',catlabels);
+  xticklabel_rotate;
+  title(sprintf('Subject %d',subjix));
+end
+%%
+
+% Note that results will vary depending on the units of the data and the
+% choice of similarity metric. In the above example, we used the
+% beta weights as given in units of percent BOLD signal change and 
+% used one minus Pearson's correlation as the measure of dissimilarity.
+% One might consider other similarity metrics and/or normalization of the 
+% data prior to RDM construction (e.g. mean-subtraction or z-scoring
+% of voxel responses or activity patterns). Caution should be exercised
+% to ensure proper intepretation of results.
+
+
+
+##### SOURCE END #####
+--></body></html>
